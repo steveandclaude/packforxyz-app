@@ -1522,16 +1522,6 @@ function openQtyPicker(itemId, tid, cellEl) {
   // Haptic feedback on supported devices
   if (navigator.vibrate) navigator.vibrate(30);
 
-  // X overlay click: clear to 0
-  const pendingVal = cellEl.querySelector('.qty-value.pending-clear');
-  if (pendingVal) {
-    pendingVal.addEventListener('click', function clearHandler() {
-      pendingVal.removeEventListener('click', clearHandler);
-      const curVal = item.q[tid] || 0;
-      if (curVal > 0) changeQty(itemId, tid, -curVal);
-      closeQtyPicker();
-    });
-  }
 }
 
 function closeQtyPicker() {
@@ -1539,8 +1529,7 @@ function closeQtyPicker() {
   const picker = document.querySelector('.qty-picker');
   if (overlay) overlay.remove();
   if (picker) picker.remove();
-  // Remove any pending-clear X overlays
-  document.querySelectorAll('.qty-value.pending-clear').forEach(v => v.classList.remove('pending-clear'));
+  removePendingClear();
   _pickerOpen = false;
 }
 
@@ -1663,10 +1652,43 @@ function submitNewItem() {
   if (catEl) catEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+let _pendingClearEl = null;
+let _pendingClearHandler = null;
+function addPendingClear(itemId, tid, cellEl) {
+  removePendingClear(); // clean up any previous handler
+  const val = cellEl.querySelector('.qty-value');
+  if (!val) return;
+  val.classList.add('pending-clear');
+  const addedAt = Date.now();
+  _pendingClearEl = val;
+  _pendingClearHandler = function(e) {
+    if (Date.now() - addedAt < 300) return; // ignore click from the same tap
+    e.stopPropagation();
+    const item = PACKING_LIST.find(i => i.id === itemId);
+    const curVal = item ? (item.q[tid] || 0) : 0;
+    if (curVal > 0) changeQty(itemId, tid, -curVal);
+    closeQtyPicker();
+  };
+  val.addEventListener('click', _pendingClearHandler);
+}
+function removePendingClear() {
+  if (_pendingClearEl && _pendingClearHandler) {
+    _pendingClearEl.removeEventListener('click', _pendingClearHandler);
+  }
+  document.querySelectorAll('.qty-value.pending-clear').forEach(v => v.classList.remove('pending-clear'));
+  _pendingClearEl = null;
+  _pendingClearHandler = null;
+}
+
+let _dragHandlersInstalled = false;
+let _pointerStartPos = null;
 function setupDragHandlers() {
+  if (_dragHandlersInstalled) return;
+  _dragHandlersInstalled = true;
   const app = document.getElementById('app');
 
   app.addEventListener('pointerdown', (e) => {
+    _pointerStartPos = { x: e.clientX, y: e.clientY };
     if (state.mode !== 'plan') return;
     if (_pickerOpen) return;
     const cell = e.target.closest('.qty-cell');
@@ -1677,19 +1699,35 @@ function setupDragHandlers() {
     const tid = val.dataset.tid;
     if (!itemId || !tid) return;
 
-    // Start long-press timer (cancelled if finger moves = scroll)
+    // Start long-press timer (cancelled if finger moves >10px = scroll)
     _longPressTimer = setTimeout(() => {
       _longPressTimer = null;
-      openQtyPicker(itemId, tid, cell);
-    }, 300);
+      const item = PACKING_LIST.find(i => i.id === itemId);
+      if (!item) return;
+      const v = item.q[tid] || 0;
+      if (v === 0) {
+        changeQty(itemId, tid, 1);
+      } else {
+        openQtyPicker(itemId, tid, cell);
+        addPendingClear(itemId, tid, cell);
+      }
+    }, 500);
   });
 
-  // Cancel long-press if finger moves (user is scrolling)
-  app.addEventListener('pointermove', () => {
-    if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+  // Cancel long-press only if finger moves >10px (real scroll, not micro-jitter)
+  app.addEventListener('pointermove', (e) => {
+    if (_longPressTimer && _pointerStartPos) {
+      const dx = e.clientX - _pointerStartPos.x;
+      const dy = e.clientY - _pointerStartPos.y;
+      if (dx * dx + dy * dy > 100) { // 10px threshold
+        clearTimeout(_longPressTimer);
+        _longPressTimer = null;
+      }
+    }
   });
 
   app.addEventListener('pointerup', (e) => {
+    _pointerStartPos = null;
     if (state.mode !== 'plan') return;
     if (_pickerOpen) return;
 
@@ -1714,14 +1752,15 @@ function setupDragHandlers() {
         // Tap zero -> set to 1
         changeQty(itemId, tid, 1);
       } else {
-        // Tap non-zero -> show X overlay + open picker
-        val.classList.add('pending-clear');
+        // Tap non-zero -> open picker, then show X overlay on cell
         openQtyPicker(itemId, tid, cell);
+        addPendingClear(itemId, tid, cell);
       }
     }
   });
 
   app.addEventListener('pointercancel', () => {
+    _pointerStartPos = null;
     if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
   });
 }
