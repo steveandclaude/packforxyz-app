@@ -158,6 +158,75 @@
       background:var(--tc);color:#fff;font-weight:800;font-size:18px;
     }
 
+    /* ===== FLOATING ADD BUTTON ===== */
+    .fab{
+      position:fixed;bottom:24px;right:24px;z-index:80;
+      width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
+      background:var(--forest-green);color:#fff;font-size:28px;font-weight:300;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 16px rgba(0,0,0,0.25),0 0 0 3px rgba(45,95,45,0.15);
+      transition:transform 0.15s,box-shadow 0.15s;line-height:1;
+    }
+    .fab:hover{transform:scale(1.08);}
+    .fab:active{transform:scale(0.95);}
+    body.pack-mode .fab{display:none;}
+
+    /* ===== ADD ITEM MODAL ===== */
+    .add-modal-overlay{
+      position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0.35);
+    }
+    .add-modal{
+      position:fixed;bottom:0;left:0;right:0;z-index:95;
+      background:var(--warm-white);border-radius:20px 20px 0 0;
+      padding:20px 20px 28px;max-height:80vh;overflow-y:auto;
+      box-shadow:0 -4px 24px rgba(0,0,0,0.15);
+    }
+    .add-modal-header{
+      display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;
+    }
+    .add-modal-title{
+      font-family:'Arvo',serif;font-size:16px;font-weight:700;color:var(--dark-brown);
+    }
+    .add-modal-close{
+      width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+      background:rgba(44,24,16,0.08);color:var(--dark-brown);font-size:18px;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .add-modal-close:hover{background:rgba(44,24,16,0.15);}
+    .add-modal-label{
+      font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
+      color:var(--medium-brown);margin:14px 0 6px;
+    }
+    .add-modal-input{
+      width:100%;padding:10px 12px;border:2px solid rgba(44,24,16,0.15);border-radius:10px;
+      font-family:'Nunito',sans-serif;font-size:15px;color:var(--dark-brown);
+      background:var(--cream);outline:none;transition:border-color 0.2s;
+    }
+    .add-modal-input:focus{border-color:var(--forest-green);}
+    .add-modal-chips{
+      display:flex;flex-wrap:wrap;gap:6px;
+    }
+    .add-modal-chip{
+      padding:6px 12px;border-radius:16px;font-size:12px;font-weight:700;
+      cursor:pointer;border:2px solid rgba(44,24,16,0.12);
+      background:var(--cream);color:var(--dark-brown);transition:all 0.15s;user-select:none;
+    }
+    .add-modal-chip:hover{border-color:var(--forest-green);background:rgba(45,95,45,0.06);}
+    .add-modal-chip.active{
+      background:var(--forest-green);color:#fff;border-color:var(--forest-green);
+      box-shadow:0 2px 8px rgba(45,95,45,0.25);
+    }
+    .add-modal-submit{
+      width:100%;margin-top:18px;padding:12px;border:none;border-radius:12px;
+      font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;
+      background:var(--forest-green);color:#fff;transition:all 0.15s;
+      box-shadow:0 2px 10px rgba(45,95,45,0.25);
+    }
+    .add-modal-submit:hover{background:#256025;}
+    .add-modal-submit:active{transform:scale(0.98);}
+    .add-modal-submit:disabled{background:rgba(44,24,16,0.12);color:rgba(44,24,16,0.3);
+      box-shadow:none;cursor:default;transform:none;}
+
     /* ===== DELETE ===== */
     .del-btn{
       width:var(--delete-size);height:var(--delete-size);display:flex;align-items:center;justify-content:center;
@@ -1030,6 +1099,8 @@ function render() {
     h += `</div></div>`;
   }
   h += `</div>`;
+  // Floating add button (plan mode only, rendered outside categories)
+  h += `<button class="fab" data-fab>+</button>`;
   app.innerHTML = h;
   document.body.classList.toggle('pack-mode', state.mode === 'pack');
 }
@@ -1337,6 +1408,9 @@ function handleClick(e) {
   // Add-item button
   const addBtn = t.closest('[data-add-item]');
   if (addBtn) { addCatalogItem(addBtn.dataset.addItem); return; }
+  // Floating add button
+  const fab = t.closest('[data-fab]');
+  if (fab) { openAddModal(); return; }
 }
 
 // ===== QTY PICKER & TAP-TO-TOGGLE (Plan mode) =====
@@ -1405,6 +1479,125 @@ function closeQtyPicker() {
   if (overlay) overlay.remove();
   if (picker) picker.remove();
   _pickerOpen = false;
+}
+
+// ===== ADD CUSTOM ITEM MODAL =====
+let _addModalCat = null;
+let _addModalSub = null;
+
+function openAddModal() {
+  closeAddModal();
+  _addModalCat = null;
+  _addModalSub = null;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'add-modal-overlay';
+  overlay.addEventListener('click', closeAddModal);
+
+  const modal = document.createElement('div');
+  modal.className = 'add-modal';
+  modal.addEventListener('click', (e) => e.stopPropagation());
+
+  modal.innerHTML = `
+    <div class="add-modal-header">
+      <div class="add-modal-title">Add New Item</div>
+      <button class="add-modal-close" data-add-close>\u2715</button>
+    </div>
+    <div class="add-modal-label">Item Name</div>
+    <input class="add-modal-input" placeholder="e.g. Headlamp, Yoga mat..." data-add-name>
+    <div class="add-modal-label">Category</div>
+    <div class="add-modal-chips" data-add-cats>
+      ${CATS.map(c => `<div class="add-modal-chip" data-add-cat-pick="${c.id}">${c.emoji} ${c.id}</div>`).join('')}
+    </div>
+    <div data-add-sub-section style="display:none">
+      <div class="add-modal-label">Subcategory <span style="opacity:0.5;font-weight:400;text-transform:none">(optional)</span></div>
+      <div class="add-modal-chips" data-add-subs></div>
+    </div>
+    <button class="add-modal-submit" data-add-submit disabled>Add Item</button>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(modal);
+
+  // Focus name input
+  const input = modal.querySelector('[data-add-name]');
+  setTimeout(() => input.focus(), 50);
+
+  // Update submit state on input
+  input.addEventListener('input', updateAddSubmit);
+
+  // Category chip clicks
+  modal.querySelector('[data-add-cats]').addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-add-cat-pick]');
+    if (!chip) return;
+    const catId = chip.dataset.addCatPick;
+    _addModalCat = catId;
+    _addModalSub = null;
+    // Update active states
+    modal.querySelectorAll('[data-add-cat-pick]').forEach(c => c.classList.toggle('active', c.dataset.addCatPick === catId));
+    // Show subcategories if they exist
+    const subSection = modal.querySelector('[data-add-sub-section]');
+    const subContainer = modal.querySelector('[data-add-subs]');
+    const subs = SUBCATEGORY_ORDER[catId];
+    if (subs && subs.length > 0) {
+      subSection.style.display = '';
+      subContainer.innerHTML = subs.map(s => `<div class="add-modal-chip" data-add-sub-pick="${s}">${s}</div>`).join('');
+      subContainer.addEventListener('click', (ev) => {
+        const sc = ev.target.closest('[data-add-sub-pick]');
+        if (!sc) return;
+        const sub = sc.dataset.addSubPick;
+        _addModalSub = _addModalSub === sub ? null : sub; // toggle
+        subContainer.querySelectorAll('[data-add-sub-pick]').forEach(c => c.classList.toggle('active', c.dataset.addSubPick === _addModalSub));
+      });
+    } else {
+      subSection.style.display = 'none';
+      subContainer.innerHTML = '';
+    }
+    updateAddSubmit();
+  });
+
+  // Close button
+  modal.querySelector('[data-add-close]').addEventListener('click', closeAddModal);
+
+  // Submit
+  modal.querySelector('[data-add-submit]').addEventListener('click', submitNewItem);
+}
+
+function closeAddModal() {
+  const overlay = document.querySelector('.add-modal-overlay');
+  const modal = document.querySelector('.add-modal');
+  if (overlay) overlay.remove();
+  if (modal) modal.remove();
+}
+
+function updateAddSubmit() {
+  const modal = document.querySelector('.add-modal');
+  if (!modal) return;
+  const name = modal.querySelector('[data-add-name]').value.trim();
+  const btn = modal.querySelector('[data-add-submit]');
+  btn.disabled = !name || !_addModalCat;
+}
+
+function submitNewItem() {
+  const modal = document.querySelector('.add-modal');
+  if (!modal) return;
+  const name = modal.querySelector('[data-add-name]').value.trim();
+  if (!name || !_addModalCat) return;
+  const newItem = {
+    id: 'custom-' + Date.now(),
+    name: name,
+    cat: _addModalCat,
+    q: { steph:0, jen:0, rio:0, dahlia:0, maeve:0, shared:0 }
+  };
+  if (_addModalSub) newItem.sub = _addModalSub;
+  PACKING_LIST.push(newItem);
+  closeAddModal();
+  saveState();
+  render();
+  setupDragHandlers();
+  // Scroll to the category
+  const catEl = document.querySelector(`[data-category="${_addModalCat}"]`);
+  if (catEl) catEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function setupDragHandlers() {
