@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pack for XYZ — Airbnb Weekend</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Arvo:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <style>
+    :root {
+      --cream: #F5EDE3; --warm-white: #FFFDF8; --dark-brown: #2C1810;
+      --medium-brown: #6B4226; --light-brown: #A67B5B; --vintage-red: #C23B22;
+      --forest-green: #2D5F2D; --gold: #B8860B; --charcoal: #3C3C3C;
+      --cell-size: 32px; --delete-size: 24px; --grid-gap: 3px; --side-pad: 10px;
+      --filter-h: 50px; --colhdr-h: 34px;
+    }
+    @media(min-width:640px){:root{--cell-size:44px;--delete-size:28px;--grid-gap:5px;--side-pad:24px;}}
+
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{height:100%;}
+    body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark-brown);min-height:100%;-webkit-font-smoothing:antialiased;}
+    button{font-family:inherit;}
+    sup{font-size:0.7em;font-weight:800;opacity:0.7;margin-left:2px;}
+
+    /* ===== GRID TEMPLATE ===== */
+    .grid-row{
+      display:grid;
+      grid-template-columns:1fr repeat(6,var(--cell-size)) var(--delete-size);
+      gap:var(--grid-gap);
+      padding-left:var(--side-pad);padding-right:var(--side-pad);
+      align-items:center;
+    }
+
+    /* ===== HEADER ===== */
+    .header{
+      background:linear-gradient(180deg,#1E0F08 0%,var(--dark-brown) 100%);
+      color:var(--cream);padding:20px var(--side-pad) 0;position:relative;overflow:hidden;
+    }
+    .header-title{font-family:'Righteous',cursive;font-size:26px;letter-spacing:1px;color:#FFF8F0;position:relative;z-index:2;}
+    .header-sub{font-size:13px;color:var(--light-brown);margin-top:4px;position:relative;z-index:2;}
+    .header-stats{font-size:12px;color:var(--gold);margin-top:6px;position:relative;z-index:2;font-weight:700;}
+    .mountains{display:block;width:100%;height:45px;margin-top:12px;}
+    @media(min-width:640px){.header-title{font-size:32px;}.header{padding:28px var(--side-pad) 0;}}
+
+    /* ===== NORDIC BORDER ===== */
+    .nordic-border{
+      height:14px;
+      background-image:url("data:image/svg+xml,%3Csvg width='24' height='14' viewBox='0 0 24 14' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 14L12 2L24 14' fill='none' stroke='%23C23B22' stroke-width='2'/%3E%3C/svg%3E");
+      background-repeat:repeat-x;background-size:24px 14px;background-color:var(--dark-brown);
+    }
+
+    /* ===== FILTER BAR ===== */
+    .filter-bar{
+      position:sticky;top:0;z-index:30;background:var(--cream);
+      padding:8px var(--side-pad);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+      border-bottom:2px solid rgba(44,24,16,0.08);box-shadow:0 2px 8px rgba(44,24,16,0.06);
+    }
+    .filter-bar::-webkit-scrollbar{display:none;}
+    .filter-chip{
+      flex-shrink:0;padding:5px 12px;border-radius:18px;font-size:12px;font-weight:700;
+      cursor:pointer;border:2px solid transparent;transition:all 0.2s;user-select:none;
+    }
+    .filter-chip:hover{transform:scale(1.04);}
+    .filter-chip.active{transform:scale(1.06);box-shadow:0 2px 10px rgba(0,0,0,0.18);}
+
+    /* ===== COLUMN HEADERS ===== */
+    .column-headers{
+      position:sticky;top:var(--filter-h);z-index:25;background:var(--cream);
+      padding-top:6px;padding-bottom:6px;border-bottom:2px solid rgba(44,24,16,0.1);
+    }
+    .col-label{font-size:10px;color:var(--medium-brown);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+    .col-hdr{
+      width:var(--cell-size);height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:800;color:#fff;transition:opacity 0.25s,transform 0.25s;
+    }
+
+    /* ===== CATEGORIES ===== */
+    .category{margin-bottom:1px;}
+    .category-header{
+      background:linear-gradient(90deg,var(--dark-brown),#4A2E1E);color:var(--cream);
+      padding:10px var(--side-pad);display:flex;align-items:center;gap:8px;
+      cursor:pointer;user-select:none;font-family:'Arvo',serif;font-size:14px;font-weight:700;
+      transition:background 0.2s;
+    }
+    .category-header:hover{background:linear-gradient(90deg,#3D2317,#5A3E2E);}
+    .cat-emoji{font-size:17px;}
+    .cat-count{font-family:'Nunito',sans-serif;font-size:11px;font-weight:600;color:var(--gold);margin-left:auto;}
+    .cat-chevron{font-size:10px;transition:transform 0.3s;display:inline-block;}
+    .category.collapsed .cat-chevron{transform:rotate(-90deg);}
+    .category-body{overflow:hidden;max-height:5000px;transition:max-height 0.35s ease;}
+    .category.collapsed .category-body{max-height:0!important;}
+
+    /* ===== ITEM ROWS ===== */
+    .item-row{
+      padding-top:6px;padding-bottom:6px;background:var(--warm-white);
+      border-bottom:1px solid rgba(44,24,16,0.05);transition:background 0.15s,opacity 0.3s;
+    }
+    .item-row:hover{background:#FFF5E8;}
+    .item-name{
+      font-family:'Arvo',serif;font-size:12.5px;font-weight:400;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:2px;
+    }
+    @media(min-width:640px){.item-name{font-size:14px;}}
+
+    /* ===== QUANTITY CELLS ===== */
+    .qty-cell{
+      width:var(--cell-size);display:flex;flex-direction:column;align-items:center;gap:0px;
+      transition:opacity 0.25s;
+    }
+    .qty-cell.dimmed{opacity:0.15;pointer-events:none;}
+    .qty-value{
+      width:calc(var(--cell-size) - 6px);height:22px;display:flex;align-items:center;justify-content:center;
+      border-radius:5px;font-size:13px;font-weight:800;
+      background:color-mix(in srgb,var(--tc) 15%,transparent);color:var(--tc);transition:all 0.15s;
+    }
+    @media(min-width:640px){.qty-value{height:26px;font-size:15px;}}
+    .qty-value.zero{background:rgba(44,24,16,0.03);color:rgba(44,24,16,0.18);font-weight:400;}
+    @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+    .qty-value.pop{animation:pop 0.2s ease;}
+
+    /* Pending-clear X overlay */
+    .qty-value.pending-clear{position:relative;}
+    .qty-value.pending-clear::after{
+      content:'\2715';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      font-size:16px;font-weight:900;color:var(--tc);
+      background:color-mix(in srgb,var(--tc) 18%,var(--warm-white));
+      border-radius:5px;opacity:0.85;
+    }
+    /* Drag active feedback */
+    .qty-cell.dragging{z-index:10;}
+    .qty-cell.dragging .qty-value{transform:scale(1.15);box-shadow:0 2px 12px rgba(0,0,0,0.15);}
+    /* Touch behavior */
+    .qty-cell{touch-action:none;}
+
+    /* ===== DELETE ===== */
+    .del-btn{
+      width:var(--delete-size);height:var(--delete-size);display:flex;align-items:center;justify-content:center;
+      border:none;background:transparent;cursor:pointer;color:var(--vintage-red);font-size:12px;
+      opacity:0;border-radius:4px;transition:opacity 0.2s,background 0.2s;
+    }
+    .item-row:hover .del-btn{opacity:0.4;}
+    .del-btn:hover{opacity:1!important;background:rgba(194,59,34,0.1);}
+    @media(hover:none){.del-btn{opacity:0.25;}}
+
+    /* ===== SUBCATEGORY DIVIDERS ===== */
+    .subcat-divider{
+      display:flex;align-items:center;gap:6px;
+      padding:6px var(--side-pad) 3px;
+      background:var(--warm-white);border-bottom:1px solid rgba(44,24,16,0.05);
+    }
+    .subcat-icon{font-size:12px;line-height:1;flex-shrink:0;}
+    .subcat-label{font-family:'Arvo',serif;font-size:10.5px;font-weight:700;
+      color:var(--medium-brown);text-transform:uppercase;letter-spacing:0.8px;white-space:nowrap;}
+    .subcat-line{flex:1;height:1px;background:linear-gradient(90deg,rgba(44,24,16,0.12),transparent);}
+
+    /* ===== SEE MORE / ADD ITEM DRAWER ===== */
+    .see-more{
+      padding:8px var(--side-pad);font-size:12px;color:var(--medium-brown);cursor:pointer;
+      font-weight:700;background:var(--warm-white);border-bottom:1px solid rgba(44,24,16,0.05);
+      transition:color 0.2s;user-select:none;
+    }
+    .see-more:hover{color:var(--vintage-red);}
+    .see-more.open{color:var(--vintage-red);}
+    .add-drawer{
+      max-height:0;overflow:hidden;transition:max-height 0.35s ease;
+      background:color-mix(in srgb,var(--cream) 60%,var(--warm-white));
+    }
+    .add-drawer.open{max-height:2000px;}
+    .add-drawer-inner{padding:6px var(--side-pad) 10px;}
+    .add-drawer-search{
+      width:100%;padding:6px 10px;border:1.5px solid rgba(44,24,16,0.15);border-radius:8px;
+      font-family:'Nunito',sans-serif;font-size:13px;background:var(--warm-white);color:var(--dark-brown);
+      outline:none;margin-bottom:6px;
+    }
+    .add-drawer-search:focus{border-color:var(--medium-brown);box-shadow:0 0 0 2px rgba(107,66,38,0.12);}
+    .add-drawer-list{max-height:240px;overflow-y:auto;scrollbar-width:thin;}
+    .add-item-option{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      padding:5px 8px;border-radius:6px;cursor:pointer;transition:background 0.15s;
+    }
+    .add-item-option:hover{background:rgba(44,24,16,0.05);}
+    .add-item-name{font-size:12.5px;font-family:'Arvo',serif;}
+    .add-item-sub{font-size:10px;color:var(--medium-brown);font-style:italic;}
+    .add-item-btn{
+      flex-shrink:0;width:24px;height:24px;border-radius:12px;border:1.5px solid var(--forest-green);
+      background:transparent;color:var(--forest-green);font-size:16px;font-weight:700;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;
+    }
+    .add-item-btn:hover{background:var(--forest-green);color:#fff;}
+    .add-drawer-empty{font-size:12px;color:var(--medium-brown);padding:8px 0;font-style:italic;text-align:center;}
+
+    /* ===== ITEM DELETE ANIM ===== */
+    .item-row.removing{opacity:0;max-height:0;padding:0;margin:0;overflow:hidden;transition:all 0.3s ease;}
+
+    /* ===== MODE TOGGLE ===== */
+    .mode-toggle{
+      display:flex;align-items:center;gap:10px;margin-top:10px;position:relative;z-index:2;
+    }
+    .mode-toggle-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
+      transition:color 0.3s,opacity 0.3s;}
+    .mode-toggle-label.active{opacity:1;}
+    .mode-toggle-label.inactive{opacity:0.4;}
+    .mode-toggle-label.plan-label{color:var(--gold);}
+    .mode-toggle-label.pack-label{color:#4ADE80;}
+    .mode-switch{
+      width:48px;height:26px;border-radius:13px;border:2px solid rgba(255,255,255,0.25);
+      background:rgba(255,255,255,0.12);cursor:pointer;position:relative;transition:all 0.3s;
+      flex-shrink:0;
+    }
+    .mode-switch::after{
+      content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+      background:var(--gold);transition:all 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.3);
+    }
+    .mode-switch.pack::after{left:24px;background:#4ADE80;}
+    .mode-switch.pack{border-color:rgba(74,222,128,0.5);background:rgba(74,222,128,0.15);}
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-section{
+      padding:10px var(--side-pad) 8px;background:var(--cream);
+      border-bottom:2px solid rgba(44,24,16,0.08);
+    }
+    .progress-bar-outer{
+      width:100%;height:10px;border-radius:5px;background:rgba(44,24,16,0.08);overflow:hidden;
+    }
+    .progress-bar-fill{
+      height:100%;border-radius:5px;transition:width 0.4s ease;
+      background:linear-gradient(90deg,#2D5F2D,#4ADE80);
+    }
+    .progress-text{
+      font-size:12px;font-weight:700;color:var(--dark-brown);margin-bottom:6px;
+      display:flex;justify-content:space-between;align-items:baseline;
+    }
+    .progress-pct{font-size:11px;color:var(--forest-green);font-weight:800;}
+    .person-progress{
+      display:flex;gap:6px;margin-top:6px;overflow-x:auto;scrollbar-width:none;
+    }
+    .person-progress::-webkit-scrollbar{display:none;}
+    .person-prog-chip{
+      flex-shrink:0;display:flex;align-items:center;gap:4px;padding:3px 8px;
+      border-radius:10px;font-size:10px;font-weight:700;
+      background:color-mix(in srgb,var(--tc) 12%,transparent);color:var(--tc);
+    }
+    .person-prog-chip .prog-mini{
+      width:24px;height:4px;border-radius:2px;background:rgba(44,24,16,0.08);overflow:hidden;
+    }
+    .person-prog-chip .prog-mini-fill{
+      height:100%;border-radius:2px;background:var(--tc);transition:width 0.4s ease;
+    }
+
+    /* ===== HIDE-PACKED TOGGLE ===== */
+    .hide-packed-chip{
+      flex-shrink:0;padding:5px 12px;border-radius:18px;font-size:12px;font-weight:700;
+      cursor:pointer;border:2px solid var(--forest-green);transition:all 0.2s;user-select:none;
+      background:var(--warm-white);color:var(--forest-green);
+    }
+    .hide-packed-chip:hover{transform:scale(1.04);}
+    .hide-packed-chip.active{background:var(--forest-green);color:#fff;
+      box-shadow:0 2px 10px rgba(45,95,45,0.25);}
+
+    /* ===== PACK-MODE CELLS ===== */
+    .pack-cell{
+      width:var(--cell-size);height:var(--cell-size);display:flex;align-items:center;
+      justify-content:center;cursor:pointer;transition:opacity 0.25s,transform 0.15s;
+      position:relative;
+    }
+    .pack-cell.dimmed{opacity:0.15;pointer-events:none;}
+    .pack-cell.empty{opacity:0.08;pointer-events:none;}
+    .pack-circle{
+      width:calc(var(--cell-size) - 8px);height:calc(var(--cell-size) - 8px);border-radius:50%;
+      border:2.5px solid var(--tc);display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:800;color:var(--tc);transition:all 0.2s;
+      background:transparent;position:relative;
+    }
+    @media(min-width:640px){.pack-circle{font-size:14px;}}
+    .pack-cell:hover .pack-circle{transform:scale(1.1);box-shadow:0 0 0 3px color-mix(in srgb,var(--tc) 20%,transparent);}
+    .pack-cell:active .pack-circle{transform:scale(0.9);}
+    .pack-circle.checked{
+      background:var(--tc);color:#fff;border-color:var(--tc);
+    }
+    .pack-circle.checked .pack-initial{display:none;}
+    .pack-circle.checked .pack-check{display:block;}
+    .pack-circle .pack-check{display:none;font-size:14px;line-height:1;}
+    @media(min-width:640px){.pack-circle .pack-check{font-size:16px;}}
+
+    /* Check-off animation */
+    @keyframes pack-pop{
+      0%{transform:scale(1)}
+      30%{transform:scale(1.25)}
+      50%{transform:scale(1.25);box-shadow:0 0 0 6px color-mix(in srgb,var(--tc) 25%,transparent);}
+      100%{transform:scale(1);box-shadow:none;}
+    }
+    .pack-circle.pop-anim{animation:pack-pop 0.35s ease;}
+
+    /* Row styling in pack mode */
+    .item-row.all-packed .item-name{text-decoration:line-through;opacity:0.45;}
+    .item-row.all-packed{opacity:0.55;}
+    .item-row.all-packed:hover{opacity:0.65;}
+    .item-row.hide-packed-row{display:none;}
+
+    /* Qty badge on checked pack circles (qty > 1) */
+    .qty-badge{
+      position:absolute;top:-2px;right:-2px;
+      min-width:14px;height:14px;border-radius:7px;
+      background:var(--tc);color:#fff;font-size:8px;font-weight:800;
+      display:flex;align-items:center;justify-content:center;padding:0 3px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.25);z-index:2;line-height:1;
+    }
+    .pack-circle.checked + .qty-badge{background:var(--forest-green);}
+
+    /* Filter separator before hide-packed chip */
+    .filter-separator{
+      width:1px;height:22px;background:rgba(44,24,16,0.15);flex-shrink:0;margin:0 2px;
+    }
+
+    /* Pack mode: hide delete buttons, show pack column label */
+    body.pack-mode .del-btn{display:none;}
+    body.pack-mode .see-more,body.pack-mode .add-drawer{display:none;}
+
+    /* Category pack progress in header */
+    .cat-pack-progress{
+      font-family:'Nunito',sans-serif;font-size:10px;font-weight:700;color:#4ADE80;
+      margin-left:6px;
+    }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ===== TRIP DATA =====
+const TRIP = {
+  name: "Airbnb Weekend", dates: "Fri\u2013Mon", destination: "Cold/Snow Airbnb",
+  duration: 4, nights: 3,
+  travelers: [
+    { id:"shared", name:"Shared", initial:"\u2605", color:"#b8860b" },
+    { id:"steph", name:"Steph", initial:"S", color:"#6366f1" },
+    { id:"jen", name:"Jen", initial:"J", color:"#ec4899" },
+    { id:"rio", name:"Rio", initial:"R", color:"#f59e0b" },
+    { id:"dahlia", name:"Dahlia", initial:"D", color:"#10b981" },
+    { id:"maeve", name:"Maeve", initial:"M", color:"#8b5cf6" }
+  ]
+};
+const CATS = [
+  { id:"Clothing", emoji:"\ud83e\udde5" }, { id:"Toiletries", emoji:"\ud83e\uddf4" },
+  { id:"Child Gear", emoji:"\ud83d\udc76" }, { id:"Electronics", emoji:"\ud83d\udd0c" },
+  { id:"Documents", emoji:"\ud83d\udcc4" }, { id:"Medical", emoji:"\ud83d\udc8a" },
+  { id:"Food & Drink", emoji:"\ud83c\udf7d\ufe0f" }, { id:"Sleep", emoji:"\ud83d\udecf\ufe0f" },
+  { id:"Bags", emoji:"\ud83c\udf92" }, { id:"Outdoors", emoji:"\ud83c\udf32" },
+  { id:"Misc", emoji:"\ud83d\udce6" }
+];
+
+// ===== SUBCATEGORY SORT ORDER =====
+// Defines canonical display order within each category. Items are sorted by
+// their `sub` field using this ordering. Items without a `sub` or with an
+// unrecognized subcategory fall to the end, preserving array order among themselves.
+const SUBCATEGORY_ORDER = {
+  Clothing: [
+    "Outerwear",   // Outermost layer — jackets, rain gear, waterproof shells
+    "Tops",        // Upper body — shirts, sweaters, baby outfits
+    "Bottoms",     // Lower body — pants, shorts, skirts
+    "Underwear",   // Base layer — underwear, bras
+    "Footwear",    // Feet — shoes, socks, slippers
+    "Sleepwear",   // Night — pajamas
+    "Swimwear",    // Water — swimsuits
+    "Accessories", // Extras — hats, scarves, jewelry
+    "Dresses",     // Full-body — dresses
+    "Formalwear",  // Formal — suits, button-downs
+  ],
+  Toiletries: [
+    "Oral Care",   // Teeth — toothbrush, toothpaste
+    "Hair Care",   // Hair — shampoo, conditioner, brush, ties
+    "Hygiene",     // Body — deodorant, wipes, soap
+    "Diapering",   // Baby — diapers, cream, changing pad
+    "Grooming",    // Grooming — razor, shaving (future items)
+    "Skincare",    // Skin — sunscreen, lotion (future items)
+  ],
+  "Child Gear": [
+    "Sleep",         // Beds, blankets, monitors, night lights
+    "Feeding",       // Bibs, sippy cups, splat mat
+    "Safety",        // Baby gate, outlet covers
+    "Gear",          // Car seats, step stool, potty
+    "Entertainment", // Toys, books, coloring supplies
+    "Clothing",      // Baby outfits
+  ],
+  Misc: [
+    "Entertainment", // Board games, books
+    "Utility",       // Trash bags, flashlights
+    "Fitness",       // Yoga mat, resistance bands
+  ],
+  Electronics: [
+    "Devices",      // Phones, tablets, speakers
+    "Accessories",  // Chargers, headphones, cables
+  ],
+};
+// Emoji icons for subcategory dividers (only needed for categories with sort config)
+// Emoji icons for subcategory dividers. Keyed by subcategory name; looked up
+// in the render loop. Where two categories share a subcategory name (e.g.
+// "Accessories" in both Clothing and Electronics), a per-category override map
+// is checked first via SUBCATEGORY_ICONS_BY_CAT.
+const SUBCATEGORY_ICONS = {
+  Outerwear: "\ud83e\udde5", Tops: "\ud83d\udc55", Bottoms: "\ud83d\udc56",
+  Underwear: "\ud83e\ude72", Footwear: "\ud83d\udc5f", Sleepwear: "\ud83d\ude34",
+  Swimwear: "\ud83e\ude71", Accessories: "\ud83e\udde3", Dresses: "\ud83d\udc57",
+  Formalwear: "\ud83d\udc54",
+  // Toiletries
+  "Oral Care": "\ud83e\udeb5", "Hair Care": "\ud83d\udc87", "Hygiene": "\ud83e\uddfc",
+  "Diapering": "\ud83e\uddf7", "Grooming": "\ud83e\ude92", "Skincare": "\ud83e\uddf4",
+  // Child Gear
+  "Sleep": "\ud83d\udecf\ufe0f", "Feeding": "\ud83c\udf7c", "Safety": "\ud83d\udd12", "Gear": "\ud83e\uddf8",
+  "Entertainment": "\ud83c\udfa8", "Clothing": "\ud83d\udc55",
+  // Misc
+  "Utility": "\ud83d\udd27", "Fitness": "\ud83d\udcaa",
+  // Electronics
+  "Devices": "\ud83d\udcf1",
+};
+// Per-category icon overrides for shared subcategory names
+const SUBCATEGORY_ICONS_BY_CAT = {
+  Electronics: { "Accessories": "\ud83d\udd0c" },
+};
+
+// ===== PACKING LIST DATA — START =====
+// Source: data/airbnb-weekend-packing-list.json (consolidated by item name)
+let PACKING_LIST = [
+  // Clothing
+  {id:"c01",name:"Jacket",cat:"Clothing",sub:"Outerwear",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
+  {id:"c02",name:"Rain jacket / Waterproof Layer",cat:"Clothing",sub:"Outerwear",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
+  {id:"c03",name:"Long-sleeve shirt",cat:"Clothing",sub:"Tops",q:{steph:3,jen:3,rio:3,dahlia:0,maeve:0,shared:0}},
+  {id:"c04",name:"Sweater / hoodie",cat:"Clothing",sub:"Tops",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
+  {id:"c05",name:"Long pants",cat:"Clothing",sub:"Bottoms",q:{steph:3,jen:3,rio:3,dahlia:0,maeve:0,shared:0}},
+  {id:"c06",name:"Waterproof pants",cat:"Clothing",sub:"Bottoms",q:{steph:0,jen:0,rio:1,dahlia:1,maeve:1,shared:0}},
+  {id:"c07",name:"Bra",cat:"Clothing",sub:"Underwear",q:{steph:3,jen:3,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"c08",name:"Underwear/garments",cat:"Clothing",sub:"Underwear",q:{steph:4,jen:4,rio:4,dahlia:4,maeve:4,shared:0}},
+  {id:"c09",name:"Shoes",cat:"Clothing",sub:"Footwear",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
+  {id:"c10",name:"Slippers",cat:"Clothing",sub:"Footwear",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"c11",name:"Socks",cat:"Clothing",sub:"Footwear",q:{steph:4,jen:4,rio:4,dahlia:4,maeve:4,shared:0}},
+  {id:"c12",name:"Pajamas",cat:"Clothing",sub:"Sleepwear",q:{steph:1,jen:1,rio:1,dahlia:2,maeve:2,shared:0}},
+  {id:"c13",name:"Swimsuit",cat:"Clothing",sub:"Swimwear",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"c14",name:"Scarf/neck covering",cat:"Clothing",sub:"Accessories",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
+  {id:"c15",name:"Winter hat",cat:"Clothing",sub:"Accessories",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
+
+  // Toiletries
+  {id:"t01",name:"Toothbrush",cat:"Toiletries",sub:"Oral Care",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
+  {id:"t02",name:"Toothpaste",cat:"Toiletries",sub:"Oral Care",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"t03",name:"Baby Shampoo/Soap",cat:"Toiletries",sub:"Hair Care",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"t04",name:"Brush/comb",cat:"Toiletries",sub:"Hair Care",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"t05",name:"Conditioner",cat:"Toiletries",sub:"Hair Care",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"t06",name:"Hair ties",cat:"Toiletries",sub:"Hair Care",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"t07",name:"Shampoo",cat:"Toiletries",sub:"Hair Care",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"t08",name:"Deodorant",cat:"Toiletries",sub:"Hygiene",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"t09",name:"Laundry bag",cat:"Toiletries",sub:"Hygiene",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"t10",name:"Soap",cat:"Toiletries",sub:"Hygiene",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"t11",name:"Wet wipes",cat:"Toiletries",sub:"Hygiene",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"t12",name:"Changing pad",cat:"Toiletries",sub:"Diapering",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"t13",name:"Daytime diapers",cat:"Toiletries",sub:"Diapering",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:20}},
+  {id:"t14",name:"Diaper cream",cat:"Toiletries",sub:"Diapering",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"t15",name:"Nighttime diapers",cat:"Toiletries",sub:"Diapering",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:12}},
+
+  // Child Gear
+  {id:"g01",name:"Baby monitor",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g02",name:"Baby monitor stand",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g03",name:"Crib blanket",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:2,maeve:2,shared:0}},
+  {id:"g04",name:"Crib sheet (fitted)",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:2,maeve:2,shared:0}},
+  {id:"g05",name:"Night light",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g06",name:"Stuffies",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:3,dahlia:3,maeve:3,shared:0}},
+  {id:"g07",name:"Travel bed / Port-a-crib",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:2,maeve:2,shared:0}},
+  {id:"g08",name:"Bibs",cat:"Child Gear",sub:"Feeding",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:4}},
+  {id:"g09",name:"Kids water bottle / Sippy cup",cat:"Child Gear",sub:"Feeding",q:{steph:0,jen:0,rio:3,dahlia:3,maeve:3,shared:0}},
+  {id:"g10",name:"Splat mat",cat:"Child Gear",sub:"Feeding",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g11",name:"Baby gate",cat:"Child Gear",sub:"Safety",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g12",name:"Outlet covers",cat:"Child Gear",sub:"Safety",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g13",name:"Step stool",cat:"Child Gear",sub:"Gear",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g14",name:"Travel car seat",cat:"Child Gear",sub:"Gear",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:3}},
+  {id:"g15",name:"Travel potty seat",cat:"Child Gear",sub:"Gear",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g16",name:"Coloring books / art supplies",cat:"Child Gear",sub:"Entertainment",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g17",name:"Kids Books",cat:"Child Gear",sub:"Entertainment",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g18",name:"Toys",cat:"Child Gear",sub:"Entertainment",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"g19",name:"Baby outfit (top + bottom)",cat:"Child Gear",sub:"Clothing",q:{steph:0,jen:0,rio:0,dahlia:4,maeve:4,shared:0}},
+
+  // Electronics
+  {id:"e01",name:"Mobile phone",cat:"Electronics",sub:"Devices",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"e02",name:"Mobile phone charger",cat:"Electronics",sub:"Devices",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"e03",name:"Tablet + charger",cat:"Electronics",sub:"Devices",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"e04",name:"Yoto / Kid device",cat:"Electronics",sub:"Devices",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"e05",name:"Bluetooth speaker",cat:"Electronics",sub:"Accessories",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"e06",name:"Car USB charger",cat:"Electronics",sub:"Accessories",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"e07",name:"Chromecast",cat:"Electronics",sub:"Accessories",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"e08",name:"Headphones",cat:"Electronics",sub:"Accessories",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"e09",name:"Kid headphones",cat:"Electronics",sub:"Accessories",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+
+  // Documents
+  {id:"d01",name:"ATM Card / Credit Cards",cat:"Documents",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"d02",name:"Driver's license / IDs",cat:"Documents",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"d03",name:"Wallet",cat:"Documents",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+
+  // Medical
+  {id:"m01",name:"Allergy meds",cat:"Medical",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"m02",name:"First Aid Kit",cat:"Medical",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"m03",name:"Ibuprofen",cat:"Medical",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"m04",name:"Stomach upset meds",cat:"Medical",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"m05",name:"Tylenol",cat:"Medical",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+
+  // Food & Drink
+  {id:"f01",name:"Ice packs for cooler",cat:"Food & Drink",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"f02",name:"Insulated coffee/tea mug",cat:"Food & Drink",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
+  {id:"f03",name:"Travel cooler",cat:"Food & Drink",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"f04",name:"Water bottle",cat:"Food & Drink",q:{steph:1,jen:1,rio:1,dahlia:0,maeve:0,shared:0}},
+
+  // Sleep
+  {id:"s01",name:"White noise machine",cat:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+
+  // Bags
+  {id:"b01",name:"Diaper bag",cat:"Bags",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"b02",name:"Toiletry bag",cat:"Bags",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+
+  // Misc
+  {id:"x01",name:"Boardgames",cat:"Misc",sub:"Entertainment",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"x02",name:"Small trash bags",cat:"Misc",sub:"Utility",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+  {id:"x03",name:"Trash bags",cat:"Misc",sub:"Utility",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
+];
+// ===== PACKING LIST DATA — END =====
+
+// ===== MASTER CATALOG (from data/packing-items.json) =====
+// Minimal item records for the "add item" drawer. Only id, name, cat, sub.
+const CATALOG = [
+  {id:"bags-001",name:"Carry-on Bag",cat:"Bags"},
+  {id:"bags-002",name:"Child carrier",cat:"Bags"},
+  {id:"bags-003",name:"Collapsible duffel",cat:"Bags"},
+  {id:"bags-004",name:"Daypack",cat:"Bags"},
+  {id:"bags-005",name:"Diaper bag",cat:"Bags"},
+  {id:"bags-006",name:"Luggage tag",cat:"Bags"},
+  {id:"bags-007",name:"Packing cubes",cat:"Bags"},
+  {id:"bags-008",name:"Suitcase",cat:"Bags"},
+  {id:"bags-009",name:"Toiletry bag",cat:"Bags"},
+  {id:"bags-010",name:"Wagon",cat:"Bags"},
+  {id:"child-clothing-001",name:"Baby outfit (top + bottom)",cat:"Child Gear",sub:"Clothing"},
+  {id:"child-diapering-001",name:"Poop scoop",cat:"Child Gear",sub:"Diapering"},
+  {id:"child-entertainment-001",name:"Coloring books / art supplies",cat:"Child Gear",sub:"Entertainment"},
+  {id:"child-entertainment-002",name:"Dress-up clothes",cat:"Child Gear",sub:"Entertainment"},
+  {id:"child-entertainment-003",name:"Kids Books",cat:"Child Gear",sub:"Entertainment"},
+  {id:"child-entertainment-004",name:"Sand toys",cat:"Child Gear",sub:"Entertainment"},
+  {id:"child-entertainment-005",name:"Toys",cat:"Child Gear",sub:"Entertainment"},
+  {id:"child-feeding-001",name:"Baby bottles",cat:"Child Gear",sub:"Feeding"},
+  {id:"child-feeding-002",name:"Baby food",cat:"Child Gear",sub:"Feeding"},
+  {id:"child-feeding-003",name:"Baby formula",cat:"Child Gear",sub:"Feeding"},
+  {id:"child-feeding-004",name:"Bibs",cat:"Child Gear",sub:"Feeding"},
+  {id:"child-feeding-005",name:"Bottle brush",cat:"Child Gear",sub:"Feeding"},
+  {id:"child-feeding-006",name:"Bottle drying rack",cat:"Child Gear",sub:"Feeding"},
+  {id:"child-feeding-007",name:"Breastfeeding pillow",cat:"Child Gear",sub:"Feeding"},
+  {id:"child-feeding-008",name:"Kids water bottle / Sippy cup",cat:"Child Gear",sub:"Feeding"},
+  {id:"child-feeding-009",name:"Pacifiers",cat:"Child Gear",sub:"Feeding"},
+  {id:"child-feeding-010",name:"Splat mat",cat:"Child Gear",sub:"Feeding"},
+  {id:"child-gear-001",name:"Baby chair",cat:"Child Gear",sub:"Gear"},
+  {id:"child-gear-002",name:"Baby pen",cat:"Child Gear",sub:"Gear"},
+  {id:"child-gear-003",name:"Step stool",cat:"Child Gear",sub:"Gear"},
+  {id:"child-gear-004",name:"Travel car seat",cat:"Child Gear",sub:"Gear"},
+  {id:"child-gear-005",name:"Travel potty seat",cat:"Child Gear",sub:"Gear"},
+  {id:"child-gear-006",name:"Travel stroller",cat:"Child Gear",sub:"Gear"},
+  {id:"child-safety-001",name:"Baby gate",cat:"Child Gear",sub:"Safety"},
+  {id:"child-safety-002",name:"Flotation device / life vest",cat:"Child Gear",sub:"Safety"},
+  {id:"child-safety-003",name:"Outlet covers",cat:"Child Gear",sub:"Safety"},
+  {id:"child-safety-004",name:"Swim diaper",cat:"Child Gear",sub:"Safety"},
+  {id:"child-sleep-001",name:"Baby monitor",cat:"Child Gear",sub:"Sleep"},
+  {id:"child-sleep-002",name:"Baby monitor stand",cat:"Child Gear",sub:"Sleep"},
+  {id:"child-sleep-003",name:"Crib blanket",cat:"Child Gear",sub:"Sleep"},
+  {id:"child-sleep-004",name:"Crib sheet (fitted)",cat:"Child Gear",sub:"Sleep"},
+  {id:"child-sleep-005",name:"Night light",cat:"Child Gear",sub:"Sleep"},
+  {id:"child-sleep-006",name:"Stuffie",cat:"Child Gear",sub:"Sleep"},
+  {id:"child-sleep-007",name:"Swaddle",cat:"Child Gear",sub:"Sleep"},
+  {id:"child-sleep-008",name:"Travel bed / Port-a-crib",cat:"Child Gear",sub:"Sleep"},
+  {id:"clothing-accessories-001",name:"Glasses",cat:"Clothing",sub:"Accessories"},
+  {id:"clothing-accessories-002",name:"Hat / cap",cat:"Clothing",sub:"Accessories"},
+  {id:"clothing-accessories-003",name:"Jewelry",cat:"Clothing",sub:"Accessories"},
+  {id:"clothing-accessories-004",name:"Scarf/neck covering",cat:"Clothing",sub:"Accessories"},
+  {id:"clothing-accessories-005",name:"Sunglasses",cat:"Clothing",sub:"Accessories"},
+  {id:"clothing-accessories-006",name:"Tie",cat:"Clothing",sub:"Accessories"},
+  {id:"clothing-accessories-007",name:"Winter hat",cat:"Clothing",sub:"Accessories"},
+  {id:"clothing-bottoms-001",name:"Long pants",cat:"Clothing",sub:"Bottoms"},
+  {id:"clothing-bottoms-002",name:"Shorts",cat:"Clothing",sub:"Bottoms"},
+  {id:"clothing-bottoms-003",name:"Skirt",cat:"Clothing",sub:"Bottoms"},
+  {id:"clothing-bottoms-004",name:"Waterproof pants",cat:"Clothing",sub:"Bottoms"},
+  {id:"clothing-bottoms-005",name:"Workout Bottom",cat:"Clothing",sub:"Bottoms"},
+  {id:"clothing-dresses-001",name:"Dress",cat:"Clothing",sub:"Dresses"},
+  {id:"clothing-footwear-001",name:"Baby shoes/sandals",cat:"Clothing",sub:"Footwear"},
+  {id:"clothing-footwear-002",name:"Hiking shoes",cat:"Clothing",sub:"Footwear"},
+  {id:"clothing-footwear-003",name:"Rain boots",cat:"Clothing",sub:"Footwear"},
+  {id:"clothing-footwear-004",name:"Sandals",cat:"Clothing",sub:"Footwear"},
+  {id:"clothing-footwear-005",name:"Shoes",cat:"Clothing",sub:"Footwear"},
+  {id:"clothing-footwear-006",name:"Slippers",cat:"Clothing",sub:"Footwear"},
+  {id:"clothing-footwear-007",name:"Socks",cat:"Clothing",sub:"Footwear"},
+  {id:"clothing-footwear-008",name:"Water shoes",cat:"Clothing",sub:"Footwear"},
+  {id:"clothing-formalwear-001",name:"Button-down shirt",cat:"Clothing",sub:"Formalwear"},
+  {id:"clothing-formalwear-002",name:"Suit jacket + pants",cat:"Clothing",sub:"Formalwear"},
+  {id:"clothing-outerwear-001",name:"Jacket",cat:"Clothing",sub:"Outerwear"},
+  {id:"clothing-outerwear-002",name:"Rain jacket / Waterproof Layer",cat:"Clothing",sub:"Outerwear"},
+  {id:"clothing-sleepwear-001",name:"Pajamas",cat:"Clothing",sub:"Sleepwear"},
+  {id:"clothing-swimwear-001",name:"Swimsuit",cat:"Clothing",sub:"Swimwear"},
+  {id:"clothing-tops-001",name:"Long-sleeve shirt",cat:"Clothing",sub:"Tops"},
+  {id:"clothing-tops-002",name:"Short-sleeve shirt",cat:"Clothing",sub:"Tops"},
+  {id:"clothing-tops-003",name:"Sweater / hoodie",cat:"Clothing",sub:"Tops"},
+  {id:"clothing-tops-004",name:"Workout Top",cat:"Clothing",sub:"Tops"},
+  {id:"clothing-underwear-001",name:"Bra",cat:"Clothing",sub:"Underwear"},
+  {id:"clothing-underwear-002",name:"Underwear/garments",cat:"Clothing",sub:"Underwear"},
+  {id:"documents-001",name:"ATM Card / Credit Cards",cat:"Documents"},
+  {id:"documents-002",name:"Driver's license / IDs",cat:"Documents"},
+  {id:"documents-003",name:"Guidebook",cat:"Documents"},
+  {id:"documents-004",name:"International driver's license",cat:"Documents"},
+  {id:"documents-005",name:"Local Transit Card",cat:"Documents"},
+  {id:"documents-006",name:"Money / Cash",cat:"Documents"},
+  {id:"documents-007",name:"Notebook",cat:"Documents"},
+  {id:"documents-008",name:"Passport",cat:"Documents"},
+  {id:"documents-009",name:"Pen",cat:"Documents"},
+  {id:"documents-010",name:"Plane tickets",cat:"Documents"},
+  {id:"documents-011",name:"Travel insurance documents",cat:"Documents"},
+  {id:"documents-012",name:"Travel visa documents",cat:"Documents"},
+  {id:"documents-013",name:"Vaccination card",cat:"Documents"},
+  {id:"documents-014",name:"Wallet",cat:"Documents"},
+  {id:"electronics-accessories-001",name:"Bluetooth speaker",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-002",name:"Car USB charger",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-003",name:"Chromecast",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-004",name:"Headphones",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-005",name:"Kid headphones",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-006",name:"Laptop stand",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-007",name:"Power bank",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-008",name:"Power strip",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-009",name:"Tablet holder",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-010",name:"Travel electric adaptor",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-011",name:"Wireless Keyboard",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-012",name:"Wireless mouse",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-accessories-013",name:"Xbox/PS controller",cat:"Electronics",sub:"Accessories"},
+  {id:"electronics-device-001",name:"Camera + lenses",cat:"Electronics",sub:"Devices"},
+  {id:"electronics-device-002",name:"eReader + charger",cat:"Electronics",sub:"Devices"},
+  {id:"electronics-device-003",name:"Fitness tracker + charger",cat:"Electronics",sub:"Devices"},
+  {id:"electronics-device-004",name:"Laptop + charger",cat:"Electronics",sub:"Devices"},
+  {id:"electronics-device-005",name:"Mobile phone",cat:"Electronics",sub:"Devices"},
+  {id:"electronics-device-006",name:"Mobile phone charger",cat:"Electronics",sub:"Devices"},
+  {id:"electronics-device-007",name:"Portable Projector + Stand/Cable",cat:"Electronics",sub:"Devices"},
+  {id:"electronics-device-008",name:"Switch / Steam Deck",cat:"Electronics",sub:"Devices"},
+  {id:"electronics-device-009",name:"Tablet + charger",cat:"Electronics",sub:"Devices"},
+  {id:"electronics-device-010",name:"Yoto / Kid device",cat:"Electronics",sub:"Devices"},
+  {id:"food-drink-001",name:"Bowls / plates",cat:"Food & Drink"},
+  {id:"food-drink-002",name:"Cast-iron pan",cat:"Food & Drink"},
+  {id:"food-drink-003",name:"Eating Utensils",cat:"Food & Drink"},
+  {id:"food-drink-004",name:"Ice packs for cooler",cat:"Food & Drink"},
+  {id:"food-drink-005",name:"Instant Coffee",cat:"Food & Drink"},
+  {id:"food-drink-006",name:"Insulated coffee/tea mug",cat:"Food & Drink"},
+  {id:"food-drink-007",name:"Larger water container",cat:"Food & Drink"},
+  {id:"food-drink-008",name:"Travel cooler",cat:"Food & Drink"},
+  {id:"food-drink-009",name:"Water bottle",cat:"Food & Drink"},
+  {id:"medical-001",name:"Allergy meds",cat:"Medical"},
+  {id:"medical-002",name:"Contacts",cat:"Medical"},
+  {id:"medical-003",name:"Contacts fluid",cat:"Medical"},
+  {id:"medical-004",name:"Ear drops",cat:"Medical"},
+  {id:"medical-005",name:"Epipen",cat:"Medical"},
+  {id:"medical-006",name:"Face masks",cat:"Medical"},
+  {id:"medical-007",name:"First Aid Kit",cat:"Medical"},
+  {id:"medical-008",name:"Ibuprofen",cat:"Medical"},
+  {id:"medical-009",name:"Inhalers",cat:"Medical"},
+  {id:"medical-010",name:"Melatonin",cat:"Medical"},
+  {id:"medical-011",name:"Prescriptions",cat:"Medical"},
+  {id:"medical-012",name:"Probiotic",cat:"Medical"},
+  {id:"medical-013",name:"Stomach upset meds",cat:"Medical"},
+  {id:"medical-014",name:"Tylenol",cat:"Medical"},
+  {id:"medical-015",name:"Vitamins",cat:"Medical"},
+  {id:"misc-entertainment-001",name:"Boardgames",cat:"Misc",sub:"Entertainment"},
+  {id:"misc-entertainment-002",name:"Book light",cat:"Misc",sub:"Entertainment"},
+  {id:"misc-entertainment-003",name:"Books",cat:"Misc",sub:"Entertainment"},
+  {id:"misc-fitness-001",name:"Resistance Bands",cat:"Misc",sub:"Fitness"},
+  {id:"misc-fitness-002",name:"Yoga mat",cat:"Misc",sub:"Fitness"},
+  {id:"misc-utility-001",name:"Clothesline",cat:"Misc",sub:"Utility"},
+  {id:"misc-utility-002",name:"Flashlight",cat:"Misc",sub:"Utility"},
+  {id:"misc-utility-003",name:"Helmet",cat:"Misc",sub:"Utility"},
+  {id:"misc-utility-004",name:"Money belt",cat:"Misc",sub:"Utility"},
+  {id:"misc-utility-005",name:"Sewing kit",cat:"Misc",sub:"Utility"},
+  {id:"misc-utility-006",name:"Small trash bags",cat:"Misc",sub:"Utility"},
+  {id:"misc-utility-007",name:"Trash bags",cat:"Misc",sub:"Utility"},
+  {id:"outdoors-001",name:"Beach/quick-dry towel",cat:"Outdoors"},
+  {id:"outdoors-002",name:"Bug repellent",cat:"Outdoors"},
+  {id:"outdoors-003",name:"Camp table",cat:"Outdoors"},
+  {id:"outdoors-004",name:"Collapsible chairs",cat:"Outdoors"},
+  {id:"outdoors-005",name:"Picnic blanket",cat:"Outdoors"},
+  {id:"outdoors-006",name:"Portable fan",cat:"Outdoors"},
+  {id:"outdoors-007",name:"Sunscreen",cat:"Outdoors"},
+  {id:"outdoors-008",name:"Sunshade",cat:"Outdoors"},
+  {id:"outdoors-009",name:"Umbrella",cat:"Outdoors"},
+  {id:"sleep-001",name:"Bed sheets",cat:"Sleep"},
+  {id:"sleep-002",name:"Blackout curtains",cat:"Sleep"},
+  {id:"sleep-003",name:"Blanket",cat:"Sleep"},
+  {id:"sleep-004",name:"Earplugs",cat:"Sleep"},
+  {id:"sleep-005",name:"Eye mask",cat:"Sleep"},
+  {id:"sleep-006",name:"Inflatable mattress",cat:"Sleep"},
+  {id:"sleep-007",name:"Inflatable mattress pump",cat:"Sleep"},
+  {id:"sleep-008",name:"Travel pillow",cat:"Sleep"},
+  {id:"sleep-009",name:"White noise machine",cat:"Sleep"},
+  {id:"toiletries-diapering-001",name:"Changing pad",cat:"Toiletries",sub:"Diapering"},
+  {id:"toiletries-diapering-002",name:"Daytime diapers",cat:"Toiletries",sub:"Diapering"},
+  {id:"toiletries-diapering-003",name:"Diaper cream",cat:"Toiletries",sub:"Diapering"},
+  {id:"toiletries-diapering-004",name:"Kid potty",cat:"Toiletries",sub:"Diapering"},
+  {id:"toiletries-diapering-005",name:"Nighttime diapers",cat:"Toiletries",sub:"Diapering"},
+  {id:"toiletries-grooming-001",name:"Razor/electric shaver",cat:"Toiletries",sub:"Grooming"},
+  {id:"toiletries-grooming-002",name:"Shaving gel/foam",cat:"Toiletries",sub:"Grooming"},
+  {id:"toiletries-hair-001",name:"Baby Shampoo/Soap",cat:"Toiletries",sub:"Hair Care"},
+  {id:"toiletries-hair-002",name:"Brush/comb",cat:"Toiletries",sub:"Hair Care"},
+  {id:"toiletries-hair-003",name:"Conditioner",cat:"Toiletries",sub:"Hair Care"},
+  {id:"toiletries-hair-004",name:"Hair dryer",cat:"Toiletries",sub:"Hair Care"},
+  {id:"toiletries-hair-005",name:"Hair styling products",cat:"Toiletries",sub:"Hair Care"},
+  {id:"toiletries-hair-006",name:"Hair ties",cat:"Toiletries",sub:"Hair Care"},
+  {id:"toiletries-hair-007",name:"Shampoo",cat:"Toiletries",sub:"Hair Care"},
+  {id:"toiletries-hair-008",name:"Water spray bottle",cat:"Toiletries",sub:"Hair Care"},
+  {id:"toiletries-hygiene-001",name:"Bath towel",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-002",name:"Birth control / condoms",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-003",name:"Cotton balls",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-004",name:"Cotton swabs (Q-Tips)",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-005",name:"Deodorant",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-006",name:"Feminine hygiene",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-007",name:"Glasses wipe cloth",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-008",name:"Laundry bag",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-009",name:"Makeup",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-010",name:"Nail clippers",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-011",name:"Perfume / Aftershave",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-012",name:"Pocket mirror",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-013",name:"Soap",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-014",name:"Toilet Paper",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-015",name:"Tweezers",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-016",name:"Washcloth",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-hygiene-017",name:"Wet wipes",cat:"Toiletries",sub:"Hygiene"},
+  {id:"toiletries-oral-001",name:"Dental floss",cat:"Toiletries",sub:"Oral Care"},
+  {id:"toiletries-oral-002",name:"Mouthwash",cat:"Toiletries",sub:"Oral Care"},
+  {id:"toiletries-oral-003",name:"Retainer",cat:"Toiletries",sub:"Oral Care"},
+  {id:"toiletries-oral-004",name:"Retainer cleaner",cat:"Toiletries",sub:"Oral Care"},
+  {id:"toiletries-oral-005",name:"Toothbrush",cat:"Toiletries",sub:"Oral Care"},
+  {id:"toiletries-oral-006",name:"Toothbrush cover",cat:"Toiletries",sub:"Oral Care"},
+  {id:"toiletries-oral-007",name:"Toothpaste",cat:"Toiletries",sub:"Oral Care"},
+];
+
+// ===== STATE =====
+const state = { activeFilters: new Set(), collapsed: new Set(), mode: 'plan', packed: new Set(), hidePacked: false };
+// activeFilters: empty Set = show all travelers. Non-empty = show only those traveler IDs.
+function isFiltered(tid) { return state.activeFilters.size === 0 || state.activeFilters.has(tid); }
+const LS_KEY = 'packforxyz-planner';
+// Capture source-of-truth subcategory map before localStorage can overwrite PACKING_LIST.
+// Used to backfill `sub` into items loaded from older saved data.
+const _SUB_MAP = Object.fromEntries(PACKING_LIST.filter(i => i.sub).map(i => [i.id, i.sub]));
+
+// ===== FIREBASE SETUP =====
+firebase.initializeApp({
+  apiKey: "AIzaSyBLGOWt4gne7Aiy09wX9IEahYBrR3rnb8g",
+  authDomain: "packforxyz.firebaseapp.com",
+  databaseURL: "https://packforxyz-default-rtdb.firebaseio.com",
+  projectId: "packforxyz",
+  storageBucket: "packforxyz.firebasestorage.app",
+  messagingSenderId: "17448904137",
+  appId: "1:17448904137:web:e8ce3b5e6e9768977c7418"
+});
+const db = firebase.database();
+const stateRef = db.ref('trips/airbnb-weekend');
+let _fbReady = false;   // true once first snapshot arrives
+let _fbWriting = false;  // guard to ignore our own writes
+
+// Shared state (synced across devices): packing list + packed items
+// Local state (per-device): filters, collapsed, mode, hidePacked
+function saveState() {
+  // Save local-only state to localStorage
+  const local = { filters: [...state.activeFilters], collapsed: [...state.collapsed],
+    mode: state.mode, hidePacked: state.hidePacked };
+  try { localStorage.setItem(LS_KEY, JSON.stringify(local)); } catch(e) {}
+  // Save shared state to Firebase
+  const shared = { list: PACKING_LIST, packed: [...state.packed] };
+  _fbWriting = true;
+  stateRef.set(shared).then(() => { _fbWriting = false; }).catch(() => { _fbWriting = false; });
+}
+
+function loadLocalState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.filters) state.activeFilters = new Set(data.filters);
+    else if (data.filter && data.filter !== 'all') state.activeFilters = new Set([data.filter]);
+    if (data.collapsed) state.collapsed = new Set(data.collapsed);
+    if (data.mode) state.mode = data.mode;
+    if (data.hidePacked) state.hidePacked = data.hidePacked;
+  } catch(e) {}
+}
+
+function applySharedData(data) {
+  if (data.list) {
+    PACKING_LIST = data.list;
+    for (const item of PACKING_LIST) {
+      if (!item.sub && _SUB_MAP[item.id]) item.sub = _SUB_MAP[item.id];
+    }
+  }
+  if (data.packed) state.packed = new Set(data.packed);
+  else state.packed = new Set();
+}
+
+// Migrate: one-time push of old localStorage data to Firebase
+function migrateFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data.list) {
+      PACKING_LIST = data.list;
+      for (const item of PACKING_LIST) {
+        if (!item.sub && _SUB_MAP[item.id]) item.sub = _SUB_MAP[item.id];
+      }
+    }
+    if (data.packed) state.packed = new Set(data.packed);
+    // Push shared data to Firebase
+    const shared = { list: PACKING_LIST, packed: [...state.packed] };
+    stateRef.set(shared);
+    // Keep only local keys in localStorage going forward
+    const local = { filters: data.filters || [], collapsed: data.collapsed || [],
+      mode: data.mode || 'plan', hidePacked: data.hidePacked || false };
+    localStorage.setItem(LS_KEY, JSON.stringify(local));
+    return true;
+  } catch(e) { return false; }
+}
+
+// Keep old name as alias so existing code calling loadState() still works during init
+function loadState() { loadLocalState(); }
+
+// ===== HELPERS =====
+function travelerCount(tid) {
+  return PACKING_LIST.reduce((s, item) => s + (item.q[tid] || 0), 0);
+}
+function totalPieces() {
+  return TRIP.travelers.reduce((s, t) => s + travelerCount(t.id), 0);
+}
+// Sort items within a category by subcategory order. Items without a `sub`
+// field or with an unrecognized subcategory sort to the end, preserving
+// their relative order (stable sort).
+function sortBySubcategory(items, category) {
+  const order = SUBCATEGORY_ORDER[category];
+  if (!order) return items; // no sort config for this category
+  return [...items].sort((a, b) => {
+    const ai = a.sub ? order.indexOf(a.sub) : -1;
+    const bi = b.sub ? order.indexOf(b.sub) : -1;
+    // Unknown subcategories go to end (Infinity)
+    return (ai === -1 ? Infinity : ai) - (bi === -1 ? Infinity : bi);
+  });
+}
+
+// ===== PACK MODE HELPERS =====
+function packKey(itemId, tid) { return itemId + '-' + tid; }
+function getPackProgress() {
+  let packed = 0, total = 0;
+  for (const item of PACKING_LIST) {
+    for (const t of TRIP.travelers) {
+      if ((item.q[t.id] || 0) > 0) { total++; if (state.packed.has(packKey(item.id, t.id))) packed++; }
+    }
+  }
+  return { packed, total };
+}
+function getPersonProgress(tid) {
+  let packed = 0, total = 0;
+  for (const item of PACKING_LIST) {
+    if ((item.q[tid] || 0) > 0) { total++; if (state.packed.has(packKey(item.id, tid))) packed++; }
+  }
+  return { packed, total };
+}
+function getCatPackProgress(catId) {
+  let packed = 0, total = 0;
+  for (const item of PACKING_LIST) {
+    if (item.cat !== catId) continue;
+    for (const t of TRIP.travelers) {
+      if ((item.q[t.id] || 0) > 0) { total++; if (state.packed.has(packKey(item.id, t.id))) packed++; }
+    }
+  }
+  return { packed, total };
+}
+function isItemFullyPacked(item) {
+  for (const t of TRIP.travelers) {
+    if ((item.q[t.id] || 0) > 0 && !state.packed.has(packKey(item.id, t.id))) return false;
+  }
+  return true;
+}
+
+// ===== RENDER =====
+function render() {
+  const app = document.getElementById('app');
+  let h = '';
+
+  // Header
+  h += `<div class="header">
+    <div class="header-title">\u2744\ufe0f ${TRIP.name}</div>
+    <div class="header-sub">${TRIP.dates} \u2022 ${TRIP.destination} \u2022 ${TRIP.travelers.length} travelers</div>
+    <div class="header-stats" id="stats">${PACKING_LIST.length} items \u2022 ${totalPieces()} pieces total</div>
+    <div class="mode-toggle">
+      <span class="mode-toggle-label plan-label ${state.mode==='plan'?'active':'inactive'}">Planning</span>
+      <div class="mode-switch ${state.mode==='pack'?'pack':''}" data-mode-toggle></div>
+      <span class="mode-toggle-label pack-label ${state.mode==='pack'?'active':'inactive'}">Packing</span>
+    </div>
+    <svg class="mountains" viewBox="0 0 800 60" preserveAspectRatio="none">
+      <path d="M0,60 L80,25 L160,42 L240,15 L340,35 L420,8 L520,30 L600,18 L700,38 L800,22 L800,60Z" fill="rgba(45,95,45,0.25)"/>
+      <path d="M0,60 L60,35 L130,48 L210,20 L300,40 L380,18 L470,38 L560,12 L660,32 L740,20 L800,42 L800,60Z" fill="rgba(45,95,45,0.4)"/>
+      <path d="M232,18 L240,15 L248,18Z" fill="rgba(255,255,255,0.25)"/>
+      <path d="M413,11 L420,8 L427,11Z" fill="rgba(255,255,255,0.25)"/>
+      <path d="M553,15 L560,12 L567,15Z" fill="rgba(255,255,255,0.25)"/>
+    </svg>
+  </div>`;
+  h += `<div class="nordic-border"></div>`;
+
+  // Progress bar (pack mode only)
+  if (state.mode === 'pack') {
+    const prog = getPackProgress();
+    const pct = prog.total ? Math.round(prog.packed / prog.total * 100) : 0;
+    h += `<div class="progress-section" id="progress-section">`;
+    h += `<div class="progress-text"><span>${prog.packed}/${prog.total} items packed</span><span class="progress-pct">${pct}%</span></div>`;
+    h += `<div class="progress-bar-outer"><div class="progress-bar-fill" id="progress-fill" style="width:${pct}%"></div></div>`;
+    h += `<div class="person-progress">`;
+    for (const t of TRIP.travelers) {
+      const pp = getPersonProgress(t.id);
+      if (pp.total === 0) continue;
+      const ppct = Math.round(pp.packed / pp.total * 100);
+      h += `<div class="person-prog-chip" style="--tc:${t.color};">${t.initial} ${pp.packed}/${pp.total}
+        <div class="prog-mini"><div class="prog-mini-fill" style="width:${ppct}%"></div></div></div>`;
+    }
+    h += `</div></div>`;
+  }
+
+  // Filter bar
+  h += `<div class="filter-bar">`;
+  const noFilter = state.activeFilters.size === 0;
+  h += `<div class="filter-chip ${noFilter?'active':''}" data-filter="all"
+    style="background:${noFilter?'var(--dark-brown)':'var(--warm-white)'};color:${noFilter?'var(--cream)':'var(--dark-brown)'};border-color:var(--dark-brown);">All<sup>${totalPieces()}</sup></div>`;
+  for (const t of TRIP.travelers) {
+    const isA = state.activeFilters.has(t.id);
+    h += `<div class="filter-chip ${isA?'active':''}" data-filter="${t.id}"
+      style="background:${isA ? t.color : t.color+'18'};color:${isA?'#fff':t.color};border-color:${t.color}${isA?'':'50'};">
+      ${t.name}<sup>${travelerCount(t.id)}</sup></div>`;
+  }
+  if (state.mode === 'pack') {
+    h += `<div class="filter-separator"></div>`;
+    h += `<div class="hide-packed-chip ${state.hidePacked?'active':''}" data-hide-packed>
+      ${state.hidePacked?'\u2713 ':''}Hide packed</div>`;
+  }
+  h += `</div>`;
+
+  // Column headers
+  h += `<div class="column-headers grid-row">`;
+  h += `<div class="col-label">${state.mode==='pack'?'Pack':'Item'}</div>`;
+  for (const t of TRIP.travelers) {
+    const dim = !isFiltered(t.id);
+    h += `<div class="col-hdr" data-traveler="${t.id}" style="background:${t.color};${dim?'opacity:0.25;transform:scale(0.85);':''}">${t.initial}</div>`;
+  }
+  h += `<div></div></div>`;
+
+  // Categories
+  h += `<div class="categories">`;
+  for (const cat of CATS) {
+    const items = sortBySubcategory(PACKING_LIST.filter(i => i.cat === cat.id), cat.id);
+    if (items.length === 0) continue;
+    const isColl = state.collapsed.has(cat.id);
+    h += `<div class="category ${isColl?'collapsed':''}" data-category="${cat.id}">`;
+    h += `<div class="category-header" data-cat="${cat.id}">
+      <span class="cat-emoji">${cat.emoji}</span><span>${cat.id}</span>
+      <span class="cat-count" data-cat-count="${cat.id}">${items.length} items</span>
+      ${state.mode==='pack'?`<span class="cat-pack-progress" data-cat-pack="${cat.id}">${(() => { const p = getCatPackProgress(cat.id); return p.packed + '/' + p.total; })()}</span>`:''}
+      <span class="cat-chevron">\u25bc</span></div>`;
+    h += `<div class="category-body">`;
+    let prevSub = null;
+    for (const item of items) {
+      // Insert subcategory divider when subcategory changes (only for categories with sort config)
+      if (SUBCATEGORY_ORDER[cat.id] && item.sub && item.sub !== prevSub) {
+        const icon = (SUBCATEGORY_ICONS_BY_CAT[cat.id] && SUBCATEGORY_ICONS_BY_CAT[cat.id][item.sub]) || SUBCATEGORY_ICONS[item.sub] || '';
+        h += `<div class="subcat-divider"><span class="subcat-icon">${icon}</span><span class="subcat-label">${item.sub}</span><span class="subcat-line"></span></div>`;
+        prevSub = item.sub;
+      }
+      // In pack mode: hide rows where none of the filtered travelers have qty > 0
+      const hasFilteredQty = state.activeFilters.size === 0 || TRIP.travelers.some(t => isFiltered(t.id) && (item.q[t.id] || 0) > 0);
+      if (state.mode === 'pack' && !hasFilteredQty) continue; // skip row entirely
+      // Packed state: in pack mode, "all packed" means all *filtered* travelers are packed
+      const allPacked = state.mode === 'pack' && TRIP.travelers.every(t => !isFiltered(t.id) || (item.q[t.id] || 0) === 0 || state.packed.has(packKey(item.id, t.id)));
+      const hideRow = state.mode === 'pack' && state.hidePacked && allPacked;
+      h += `<div class="item-row grid-row ${allPacked?'all-packed':''} ${hideRow?'hide-packed-row':''}" data-row="${item.id}">`;
+      h += `<div class="item-name" title="${item.name}">${item.name}</div>`;
+      for (const t of TRIP.travelers) {
+        const v = item.q[t.id] || 0;
+        const dim = !isFiltered(t.id);
+        if (state.mode === 'pack') {
+          const pk = state.packed.has(packKey(item.id, t.id));
+          h += `<div class="pack-cell ${dim?'dimmed':''} ${v===0?'empty':''}" data-cell="${item.id}-${t.id}" data-traveler="${t.id}" style="--tc:${t.color};"
+            data-pack-item="${item.id}" data-pack-tid="${t.id}">
+            <div class="pack-circle ${pk?'checked':''}">
+              <span class="pack-initial">${v > 0 ? v : ''}</span>
+              <span class="pack-check">\u2713</span>
+            </div>
+            ${v > 1 && pk ? `<span class="qty-badge">\u00d7${v}</span>` : ''}
+          </div>`;
+        } else {
+          h += `<div class="qty-cell ${dim?'dimmed':''}" data-cell="${item.id}-${t.id}" data-traveler="${t.id}" style="--tc:${t.color};">
+            <div class="qty-value ${v===0?'zero':''}" data-item="${item.id}" data-tid="${t.id}">${v===0?'\u00b7':v}</div>
+          </div>`;
+        }
+      }
+      h += `<button class="del-btn" data-del="${item.id}" title="Remove">\u2715</button>`;
+      h += `</div>`;
+    }
+    h += `<div class="see-more" data-add-cat="${cat.id}">+ Add ${cat.id.toLowerCase()} items\u2026</div>`;
+    h += `<div class="add-drawer" data-drawer="${cat.id}"><div class="add-drawer-inner">
+      <input class="add-drawer-search" type="text" placeholder="Search ${cat.id.toLowerCase()} items\u2026" data-search-cat="${cat.id}">
+      <div class="add-drawer-list" data-drawer-list="${cat.id}"></div>
+    </div></div>`;
+    h += `</div></div>`;
+  }
+  h += `</div>`;
+  app.innerHTML = h;
+  document.body.classList.toggle('pack-mode', state.mode === 'pack');
+}
+
+// ===== ACTIONS =====
+function setFilter(id) {
+  if (id === 'all') {
+    state.activeFilters.clear();
+  } else {
+    if (state.activeFilters.has(id)) state.activeFilters.delete(id);
+    else state.activeFilters.add(id);
+  }
+  // In pack mode, re-render since row visibility changes
+  if (state.mode === 'pack') { saveState(); render(); return; }
+  // In plan mode, do incremental DOM updates
+  const noFilter = state.activeFilters.size === 0;
+  // Update chips
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    const f = c.dataset.filter;
+    const isA = f === 'all' ? noFilter : state.activeFilters.has(f);
+    c.classList.toggle('active', isA);
+    if (f === 'all') {
+      c.style.background = isA ? 'var(--dark-brown)' : 'var(--warm-white)';
+      c.style.color = isA ? 'var(--cream)' : 'var(--dark-brown)';
+    } else {
+      const t = TRIP.travelers.find(t => t.id === f);
+      c.style.background = isA ? t.color : t.color + '18';
+      c.style.color = isA ? '#fff' : t.color;
+      c.style.borderColor = t.color + (isA ? '' : '50');
+    }
+  });
+  // Update col headers
+  document.querySelectorAll('.col-hdr').forEach(h => {
+    const dim = !isFiltered(h.dataset.traveler);
+    h.style.opacity = dim ? '0.25' : '1';
+    h.style.transform = dim ? 'scale(0.85)' : 'scale(1)';
+  });
+  // Update cells
+  document.querySelectorAll('.qty-cell, .pack-cell').forEach(c => {
+    if (c.classList.contains('empty')) return;
+    c.classList.toggle('dimmed', !isFiltered(c.dataset.traveler));
+  });
+  saveState();
+}
+
+function changeQty(itemId, tid, delta) {
+  const item = PACKING_LIST.find(i => i.id === itemId);
+  if (!item) return;
+  const nv = Math.max(0, (item.q[tid] || 0) + delta);
+  item.q[tid] = nv;
+  // Update cell
+  const cell = document.querySelector(`[data-cell="${itemId}-${tid}"]`);
+  if (cell) {
+    const val = cell.querySelector('.qty-value');
+    val.textContent = nv === 0 ? '\u00b7' : nv;
+    val.classList.toggle('zero', nv === 0);
+    val.classList.remove('pop');
+    void val.offsetWidth;
+    val.classList.add('pop');
+  }
+  updateStats();
+  saveState();
+}
+
+function deleteItem(itemId) {
+  const row = document.querySelector(`[data-row="${itemId}"]`);
+  if (row) {
+    row.classList.add('removing');
+    setTimeout(() => {
+      PACKING_LIST = PACKING_LIST.filter(i => i.id !== itemId);
+      row.remove();
+      updateStats();
+      updateCatCounts();
+      saveState();
+    }, 300);
+  }
+}
+
+function toggleCat(catId) {
+  const sec = document.querySelector(`.category[data-category="${catId}"]`);
+  if (!sec) return;
+  sec.classList.toggle('collapsed');
+  if (sec.classList.contains('collapsed')) state.collapsed.add(catId);
+  else state.collapsed.delete(catId);
+  saveState();
+}
+
+// ===== ADD ITEM FROM CATALOG =====
+function getAvailableCatalogItems(catId) {
+  const existingNames = new Set(PACKING_LIST.filter(i => i.cat === catId).map(i => i.name));
+  return CATALOG.filter(c => c.cat === catId && !existingNames.has(c.name));
+}
+
+function toggleAddDrawer(catId) {
+  const drawer = document.querySelector(`[data-drawer="${catId}"]`);
+  const link = document.querySelector(`[data-add-cat="${catId}"]`);
+  if (!drawer || !link) return;
+  const isOpen = drawer.classList.contains('open');
+  // Close all other drawers first
+  document.querySelectorAll('.add-drawer.open').forEach(d => {
+    d.classList.remove('open');
+    const cat = d.dataset.drawer;
+    const l = document.querySelector(`[data-add-cat="${cat}"]`);
+    if (l) { l.classList.remove('open'); l.textContent = '+ Add ' + cat.toLowerCase() + ' items\u2026'; }
+  });
+  if (isOpen) return; // was open, now closed
+  drawer.classList.add('open');
+  link.classList.add('open');
+  link.textContent = '\u2212 Close';
+  renderDrawerList(catId, '');
+  const search = drawer.querySelector('.add-drawer-search');
+  if (search) { search.value = ''; search.focus(); }
+}
+
+function renderDrawerList(catId, query) {
+  const listEl = document.querySelector(`[data-drawer-list="${catId}"]`);
+  if (!listEl) return;
+  let items = sortBySubcategory(getAvailableCatalogItems(catId), catId);
+  if (query) {
+    const q = query.toLowerCase();
+    items = items.filter(i => i.name.toLowerCase().includes(q) || (i.sub && i.sub.toLowerCase().includes(q)));
+  }
+  if (items.length === 0) {
+    listEl.innerHTML = `<div class="add-drawer-empty">${query ? 'No matches' : 'All catalog items already added'}</div>`;
+    return;
+  }
+  listEl.innerHTML = items.map(item =>
+    `<div class="add-item-option" data-add-item="${item.id}">
+      <div><div class="add-item-name">${item.name}</div>${item.sub ? `<div class="add-item-sub">${item.sub}</div>` : ''}</div>
+      <button class="add-item-btn" data-add-item="${item.id}">+</button>
+    </div>`
+  ).join('');
+}
+
+function addCatalogItem(catalogId) {
+  const catItem = CATALOG.find(c => c.id === catalogId);
+  if (!catItem) return;
+  // Already exists?
+  if (PACKING_LIST.some(i => i.name === catItem.name && i.cat === catItem.cat)) return;
+  const newItem = {
+    id: catalogId,
+    name: catItem.name,
+    cat: catItem.cat,
+    q: { steph:0, jen:0, rio:0, dahlia:0, maeve:0, shared:0 }
+  };
+  if (catItem.sub) newItem.sub = catItem.sub;
+  PACKING_LIST.push(newItem);
+  saveState();
+  // Re-render and re-open the drawer for this category
+  const catId = catItem.cat;
+  render();
+  // Re-open the drawer so user can keep adding
+  const drawer = document.querySelector(`[data-drawer="${catId}"]`);
+  const link = document.querySelector(`[data-add-cat="${catId}"]`);
+  if (drawer && link) {
+    drawer.classList.add('open');
+    link.classList.add('open');
+    link.textContent = '\u2212 Close';
+    const search = drawer.querySelector('.add-drawer-search');
+    renderDrawerList(catId, search ? search.value : '');
+  }
+}
+
+function updateStats() {
+  const el = document.getElementById('stats');
+  if (el) el.textContent = `${PACKING_LIST.length} items \u2022 ${totalPieces()} pieces total`;
+  // Update chip counts
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    const sup = c.querySelector('sup');
+    if (!sup) return;
+    const f = c.dataset.filter;
+    sup.textContent = f === 'all' ? totalPieces() : travelerCount(f);
+  });
+}
+
+function updateCatCounts() {
+  for (const cat of CATS) {
+    const el = document.querySelector(`[data-cat-count="${cat.id}"]`);
+    if (el) {
+      const n = PACKING_LIST.filter(i => i.cat === cat.id).length;
+      el.textContent = `${n} items`;
+    }
+  }
+}
+
+// ===== PACK MODE ACTIONS =====
+function toggleMode() {
+  state.mode = state.mode === 'plan' ? 'pack' : 'plan';
+  saveState();
+  render();
+}
+
+function togglePacked(itemId, tid) {
+  const item = PACKING_LIST.find(i => i.id === itemId);
+  if (!item || (item.q[tid] || 0) === 0) return;
+  const key = packKey(itemId, tid);
+  if (state.packed.has(key)) state.packed.delete(key);
+  else state.packed.add(key);
+  // Update circle visually
+  const cell = document.querySelector(`[data-cell="${itemId}-${tid}"]`);
+  if (cell) {
+    const circle = cell.querySelector('.pack-circle');
+    const isNowPacked = state.packed.has(key);
+    if (circle) {
+      circle.classList.toggle('checked', isNowPacked);
+      circle.classList.remove('pop-anim');
+      void circle.offsetWidth;
+      circle.classList.add('pop-anim');
+    }
+    // Qty badge: show/hide for qty > 1
+    const v = item.q[tid] || 0;
+    let badge = cell.querySelector('.qty-badge');
+    if (v > 1 && isNowPacked) {
+      if (!badge) { badge = document.createElement('span'); badge.className = 'qty-badge'; cell.appendChild(badge); }
+      badge.textContent = '\u00d7' + v;
+    } else if (badge) {
+      badge.remove();
+    }
+  }
+  // Update row all-packed state (respects current filter)
+  const row = document.querySelector(`[data-row="${itemId}"]`);
+  if (row) {
+    const ap = TRIP.travelers.every(t => !isFiltered(t.id) || (item.q[t.id] || 0) === 0 || state.packed.has(packKey(item.id, t.id)));
+    row.classList.toggle('all-packed', ap);
+    row.classList.toggle('hide-packed-row', state.hidePacked && ap);
+  }
+  updatePackProgress();
+  saveState();
+}
+
+function toggleHidePacked() {
+  state.hidePacked = !state.hidePacked;
+  // Update chip
+  const chip = document.querySelector('[data-hide-packed]');
+  if (chip) {
+    chip.classList.toggle('active', state.hidePacked);
+    chip.textContent = (state.hidePacked ? '\u2713 ' : '') + 'Hide packed';
+  }
+  // Update all rows (respects current filter)
+  document.querySelectorAll('.item-row').forEach(row => {
+    const id = row.dataset.row;
+    const item = PACKING_LIST.find(i => i.id === id);
+    if (item) {
+      const ap = TRIP.travelers.every(t => !isFiltered(t.id) || (item.q[t.id] || 0) === 0 || state.packed.has(packKey(item.id, t.id)));
+      row.classList.toggle('all-packed', ap);
+      row.classList.toggle('hide-packed-row', state.hidePacked && ap);
+    }
+  });
+  saveState();
+}
+
+function updatePackProgress() {
+  const prog = getPackProgress();
+  const pct = prog.total ? Math.round(prog.packed / prog.total * 100) : 0;
+  const section = document.getElementById('progress-section');
+  if (!section) return;
+  const textEl = section.querySelector('.progress-text');
+  if (textEl) textEl.innerHTML = `<span>${prog.packed}/${prog.total} items packed</span><span class="progress-pct">${pct}%</span>`;
+  const fill = document.getElementById('progress-fill');
+  if (fill) fill.style.width = pct + '%';
+  // Person progress
+  const chips = section.querySelectorAll('.person-prog-chip');
+  let idx = 0;
+  for (const t of TRIP.travelers) {
+    const pp = getPersonProgress(t.id);
+    if (pp.total === 0) continue;
+    const ppct = Math.round(pp.packed / pp.total * 100);
+    if (chips[idx]) {
+      chips[idx].innerHTML = `${t.initial} ${pp.packed}/${pp.total} <div class="prog-mini"><div class="prog-mini-fill" style="width:${ppct}%"></div></div>`;
+    }
+    idx++;
+  }
+  // Category progress
+  for (const cat of CATS) {
+    const el = document.querySelector(`[data-cat-pack="${cat.id}"]`);
+    if (el) { const cp = getCatPackProgress(cat.id); el.textContent = cp.packed + '/' + cp.total; }
+  }
+}
+
+// ===== EVENT DELEGATION =====
+function handleClick(e) {
+  const t = e.target;
+  // Mode toggle
+  const modeToggle = t.closest('[data-mode-toggle]');
+  if (modeToggle) { toggleMode(); return; }
+  // Hide-packed toggle
+  const hidePacked = t.closest('[data-hide-packed]');
+  if (hidePacked) { toggleHidePacked(); return; }
+  // Filter chips
+  const chip = t.closest('.filter-chip');
+  if (chip) { setFilter(chip.dataset.filter); return; }
+  const catH = t.closest('.category-header');
+  if (catH) { toggleCat(catH.dataset.cat); return; }
+  // Pack mode: tap to check off
+  const packCell = t.closest('.pack-cell');
+  if (packCell && !packCell.classList.contains('empty')) {
+    togglePacked(packCell.dataset.packItem, packCell.dataset.packTid);
+    return;
+  }
+  const del = t.closest('.del-btn');
+  if (del) { deleteItem(del.dataset.del); return; }
+  // Add-item drawer toggle
+  const addLink = t.closest('.see-more[data-add-cat]');
+  if (addLink) { toggleAddDrawer(addLink.dataset.addCat); return; }
+  // Add-item button
+  const addBtn = t.closest('[data-add-item]');
+  if (addBtn) { addCatalogItem(addBtn.dataset.addItem); return; }
+}
+
+// ===== DRAG-TO-ADJUST & TAP-TO-TOGGLE (Plan mode) =====
+let _dragState = null;
+let _pendingClear = null; // { itemId, tid, timeout }
+
+function setupDragHandlers() {
+  const app = document.getElementById('app');
+
+  app.addEventListener('pointerdown', (e) => {
+    if (state.mode !== 'plan') return;
+    const cell = e.target.closest('.qty-cell');
+    if (!cell || cell.classList.contains('dimmed')) return;
+    const val = cell.querySelector('.qty-value');
+    if (!val) return;
+    const itemId = val.dataset.item;
+    const tid = val.dataset.tid;
+    if (!itemId || !tid) return;
+
+    try { cell.setPointerCapture(e.pointerId); } catch(_) {}
+    _dragState = { cell, val, itemId, tid, startY: e.clientY, moved: false, lastDelta: 0 };
+    cell.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  app.addEventListener('pointermove', (e) => {
+    if (!_dragState) return;
+    const dy = _dragState.startY - e.clientY; // positive = up = increment
+    const threshold = 25; // px per step
+    const steps = Math.floor(dy / threshold);
+    if (steps !== _dragState.lastDelta) {
+      const diff = steps - _dragState.lastDelta;
+      _dragState.lastDelta = steps;
+      _dragState.moved = true;
+      changeQty(_dragState.itemId, _dragState.tid, diff);
+    }
+  });
+
+  app.addEventListener('pointerup', (e) => {
+    if (!_dragState) return;
+    const { cell, val, itemId, tid, moved } = _dragState;
+    cell.classList.remove('dragging');
+    _dragState = null;
+
+    if (!moved) {
+      // It was a tap, not a drag
+      const item = PACKING_LIST.find(i => i.id === itemId);
+      if (!item) return;
+      const v = item.q[tid] || 0;
+
+      if (v === 0) {
+        // Tap zero -> set to 1
+        changeQty(itemId, tid, 1);
+      } else if (v === 1) {
+        // Check if already in pending-clear state
+        if (_pendingClear && _pendingClear.itemId === itemId && _pendingClear.tid === tid) {
+          // Second tap -> clear to 0
+          clearTimeout(_pendingClear.timeout);
+          val.classList.remove('pending-clear');
+          _pendingClear = null;
+          changeQty(itemId, tid, -1);
+        } else {
+          // First tap on 1 -> show X overlay
+          if (_pendingClear) {
+            clearTimeout(_pendingClear.timeout);
+            const prevVal = document.querySelector(`[data-cell="${_pendingClear.itemId}-${_pendingClear.tid}"] .qty-value`);
+            if (prevVal) prevVal.classList.remove('pending-clear');
+          }
+          val.classList.add('pending-clear');
+          _pendingClear = {
+            itemId, tid,
+            timeout: setTimeout(() => {
+              val.classList.remove('pending-clear');
+              _pendingClear = null;
+            }, 2000)
+          };
+        }
+      }
+      // qty > 1: tap does nothing, use drag
+    }
+  });
+
+  app.addEventListener('pointercancel', () => {
+    if (_dragState) {
+      _dragState.cell.classList.remove('dragging');
+      _dragState = null;
+    }
+  });
+}
+
+// ===== INIT =====
+loadLocalState();
+
+// Firebase real-time listener — re-renders when any device changes shared state
+stateRef.on('value', (snapshot) => {
+  if (_fbWriting) return; // ignore echoes of our own writes
+  const data = snapshot.val();
+  if (data) {
+    applySharedData(data);
+    if (!_fbReady) _fbReady = true;
+  } else if (!_fbReady) {
+    // Firebase is empty — migrate from localStorage if available
+    migrateFromLocalStorage();
+    _fbReady = true;
+  }
+  render();
+  setupDragHandlers();
+});
+
+// Render immediately with local data while waiting for Firebase
+render();
+document.getElementById('app').addEventListener('click', handleClick);
+document.getElementById('app').addEventListener('input', (e) => {
+  const search = e.target.closest('.add-drawer-search');
+  if (search) renderDrawerList(search.dataset.searchCat, search.value);
+});
+setupDragHandlers();
+</script>
+</body>
+</html>
