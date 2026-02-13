@@ -1239,7 +1239,6 @@ function renderDrawerList(catId, query) {
 function addCatalogItem(catalogId) {
   const catItem = CATALOG.find(c => c.id === catalogId);
   if (!catItem) return;
-  // Already exists?
   if (PACKING_LIST.some(i => i.name === catItem.name && i.cat === catItem.cat)) return;
   const newItem = {
     id: catalogId,
@@ -1250,18 +1249,45 @@ function addCatalogItem(catalogId) {
   if (catItem.sub) newItem.sub = catItem.sub;
   PACKING_LIST.push(newItem);
   saveState();
-  // Re-render and re-open the drawer for this category
+
+  // Remove just the clicked item from the drawer list (preserves scroll)
   const catId = catItem.cat;
+  const listEl = document.querySelector(`[data-drawer-list="${catId}"]`);
+  if (listEl) {
+    const itemEl = listEl.querySelector(`[data-add-item="${catalogId}"]`);
+    // The option div is the parent of the button
+    const optionEl = itemEl ? itemEl.closest('.add-item-option') : null;
+    if (optionEl) optionEl.remove();
+    // Show empty message if no items left
+    if (listEl.children.length === 0) {
+      listEl.innerHTML = '<div class="add-drawer-empty">All catalog items already added</div>';
+    }
+  }
+
+  // Save drawer state before full re-render
+  const drawerSearch = document.querySelector(`[data-drawer="${catId}"] .add-drawer-search`);
+  const searchVal = drawerSearch ? drawerSearch.value : '';
+  const drawerWasOpen = document.querySelector(`[data-drawer="${catId}"]`)?.classList.contains('open');
+  const drawerScrollTop = listEl ? listEl.scrollTop : 0;
+
   render();
-  // Re-open the drawer so user can keep adding
-  const drawer = document.querySelector(`[data-drawer="${catId}"]`);
-  const link = document.querySelector(`[data-add-cat="${catId}"]`);
-  if (drawer && link) {
-    drawer.classList.add('open');
-    link.classList.add('open');
-    link.textContent = '\u2212 Close';
-    const search = drawer.querySelector('.add-drawer-search');
-    renderDrawerList(catId, search ? search.value : '');
+  setupDragHandlers();
+
+  // Restore drawer state
+  if (drawerWasOpen) {
+    const drawer = document.querySelector(`[data-drawer="${catId}"]`);
+    const link = document.querySelector(`[data-add-cat="${catId}"]`);
+    if (drawer && link) {
+      drawer.classList.add('open');
+      link.classList.add('open');
+      link.textContent = '\u2212 Close';
+      const search = drawer.querySelector('.add-drawer-search');
+      if (search) search.value = searchVal;
+      renderDrawerList(catId, searchVal);
+      // Restore scroll position
+      const newList = document.querySelector(`[data-drawer-list="${catId}"]`);
+      if (newList) newList.scrollTop = drawerScrollTop;
+    }
   }
 }
 
