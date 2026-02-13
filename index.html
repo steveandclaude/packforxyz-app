@@ -15,7 +15,7 @@
       --medium-brown: #6B4226; --light-brown: #A67B5B; --vintage-red: #C23B22;
       --forest-green: #2D5F2D; --gold: #B8860B; --charcoal: #3C3C3C;
       --cell-size: 38px; --delete-size: 26px; --grid-gap: 4px; --side-pad: 10px; --mode-bar-h: 42px;
-      --filter-h: 50px; --colhdr-h: 34px;
+      --colhdr-h: 34px;
     }
     @media(min-width:640px){:root{--cell-size:46px;--delete-size:30px;--grid-gap:5px;--side-pad:24px;}}
 
@@ -28,7 +28,7 @@
     /* ===== GRID TEMPLATE ===== */
     .grid-row{
       display:grid;
-      grid-template-columns:1fr repeat(6,var(--cell-size)) var(--delete-size);
+      grid-template-columns:var(--grid-cols, 1fr repeat(6,var(--cell-size)) var(--delete-size));
       gap:var(--grid-gap);
       padding-left:var(--side-pad);padding-right:var(--side-pad);
       align-items:center;
@@ -37,45 +37,29 @@
     /* ===== HEADER ===== */
     .header{
       background:linear-gradient(180deg,#1E0F08 0%,var(--dark-brown) 100%);
-      color:var(--cream);padding:20px var(--side-pad) 0;position:relative;overflow:hidden;
+      color:var(--cream);padding:12px var(--side-pad);
     }
-    .header-title{font-family:'Righteous',cursive;font-size:26px;letter-spacing:1px;color:#FFF8F0;position:relative;z-index:2;}
-    .header-sub{font-size:13px;color:var(--light-brown);margin-top:4px;position:relative;z-index:2;}
-    .header-stats{font-size:12px;color:var(--gold);margin-top:6px;position:relative;z-index:2;font-weight:700;}
-    .mountains{display:block;width:100%;height:45px;margin-top:12px;}
-    @media(min-width:640px){.header-title{font-size:32px;}.header{padding:28px var(--side-pad) 0;}}
+    .header-title{font-family:'Righteous',cursive;font-size:26px;letter-spacing:1px;color:#FFF8F0;}
+    @media(min-width:640px){.header-title{font-size:32px;}.header{padding:14px var(--side-pad);}}
 
-    /* ===== NORDIC BORDER ===== */
-    .nordic-border{
-      height:14px;
-      background-image:url("data:image/svg+xml,%3Csvg width='24' height='14' viewBox='0 0 24 14' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 14L12 2L24 14' fill='none' stroke='%23C23B22' stroke-width='2'/%3E%3C/svg%3E");
-      background-repeat:repeat-x;background-size:24px 14px;background-color:var(--dark-brown);
-    }
-
-    /* ===== FILTER BAR ===== */
-    .filter-bar{
-      position:sticky;top:var(--mode-bar-h);z-index:30;background:var(--cream);
-      padding:8px var(--side-pad);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
-      border-bottom:2px solid rgba(44,24,16,0.08);box-shadow:0 2px 8px rgba(44,24,16,0.06);
-    }
-    .filter-bar::-webkit-scrollbar{display:none;}
-    .filter-chip{
-      flex-shrink:0;padding:5px 12px;border-radius:18px;font-size:12px;font-weight:700;
-      cursor:pointer;border:2px solid transparent;transition:all 0.2s;user-select:none;
-    }
-    .filter-chip:hover{transform:scale(1.04);}
-    .filter-chip.active{transform:scale(1.06);box-shadow:0 2px 10px rgba(0,0,0,0.18);}
 
     /* ===== COLUMN HEADERS ===== */
     .column-headers{
-      position:sticky;top:calc(var(--mode-bar-h) + var(--filter-h));z-index:25;background:var(--cream);
+      position:sticky;top:var(--mode-bar-h);z-index:25;background:var(--cream);
       padding-top:6px;padding-bottom:6px;border-bottom:2px solid rgba(44,24,16,0.1);
     }
-    .col-label{font-size:10px;color:var(--medium-brown);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+    .col-all{
+      height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+      padding:0 10px;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.25s;user-select:none;
+    }
+    .col-all.active{background:var(--dark-brown);color:var(--cream);}
+    .col-all:not(.active){background:rgba(44,24,16,0.15);color:var(--dark-brown);opacity:0.5;}
+    .col-all:hover{opacity:0.8!important;}
     .col-hdr{
       width:var(--cell-size);height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;
-      font-size:11px;font-weight:800;color:#fff;transition:opacity 0.25s,transform 0.25s;
+      font-size:11px;font-weight:800;color:#fff;cursor:pointer;transition:opacity 0.25s,transform 0.25s;user-select:none;
     }
+    .col-hdr:hover{opacity:0.8!important;}
 
     /* ===== CATEGORIES ===== */
     .category{margin-bottom:1px;}
@@ -352,10 +336,27 @@
       position:sticky;top:0;z-index:32;
       background:var(--cream);
       padding:8px var(--side-pad);
-      display:flex;align-items:center;justify-content:center;gap:10px;
+      display:flex;align-items:center;justify-content:space-between;
       border-bottom:1px solid rgba(44,24,16,0.08);
       box-shadow:0 1px 4px rgba(44,24,16,0.04);
     }
+    .mode-bar-left,.mode-bar-right{display:flex;align-items:center;min-width:80px;}
+    .mode-bar-right{justify-content:flex-end;}
+    .mode-bar-center{display:flex;align-items:center;gap:10px;}
+    .manage-btn{
+      display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;border:1.5px solid rgba(44,24,16,0.2);
+      background:transparent;cursor:pointer;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;
+      color:var(--medium-brown);transition:all 0.15s;
+    }
+    .manage-btn:hover{background:rgba(44,24,16,0.06);border-color:rgba(44,24,16,0.35);}
+    .hide-packed-toggle{
+      display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;
+      border:1.5px solid var(--forest-green);background:transparent;cursor:pointer;
+      font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--forest-green);
+      transition:all 0.15s;user-select:none;
+    }
+    .hide-packed-toggle:hover{background:rgba(45,95,45,0.06);}
+    .hide-packed-toggle.active{background:var(--forest-green);color:#fff;}
     .mode-toggle-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
       transition:color 0.3s,opacity 0.3s;}
     .mode-toggle-label.active{opacity:1;}
@@ -407,15 +408,6 @@
       height:100%;border-radius:2px;background:var(--tc);transition:width 0.4s ease;
     }
 
-    /* ===== HIDE-PACKED TOGGLE ===== */
-    .hide-packed-chip{
-      flex-shrink:0;padding:5px 12px;border-radius:18px;font-size:12px;font-weight:700;
-      cursor:pointer;border:2px solid var(--forest-green);transition:all 0.2s;user-select:none;
-      background:var(--warm-white);color:var(--forest-green);
-    }
-    .hide-packed-chip:hover{transform:scale(1.04);}
-    .hide-packed-chip.active{background:var(--forest-green);color:#fff;
-      box-shadow:0 2px 10px rgba(45,95,45,0.25);}
 
     /* ===== PACK-MODE CELLS ===== */
     .pack-cell{
@@ -467,11 +459,6 @@
     }
     .pack-circle.checked + .qty-badge{background:var(--forest-green);}
 
-    /* Filter separator before hide-packed chip */
-    .filter-separator{
-      width:1px;height:22px;background:rgba(44,24,16,0.15);flex-shrink:0;margin:0 2px;
-    }
-
     /* Pack mode: hide delete buttons, show pack column label */
     body.pack-mode .del-btn{display:none;}
     .item-row.pack-edit-row .del-btn{display:flex!important;position:relative;z-index:96;opacity:1!important;}
@@ -482,6 +469,74 @@
       font-family:'Nunito',sans-serif;font-size:10px;font-weight:700;color:#4ADE80;
       margin-left:6px;
     }
+
+    /* ===== TRAVELLER MANAGEMENT MODAL ===== */
+    .trav-modal-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0.35);}
+    .trav-modal{
+      position:fixed;top:10vh;left:8px;right:8px;z-index:95;
+      background:var(--warm-white);border-radius:16px;
+      padding:20px 20px 28px;max-height:80vh;overflow-y:auto;
+      box-shadow:0 4px 24px rgba(0,0,0,0.2);
+    }
+    .trav-modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+    .trav-modal-title{font-family:'Arvo',serif;font-size:16px;font-weight:700;color:var(--dark-brown);}
+    .trav-list{display:flex;flex-direction:column;gap:4px;}
+    .trav-row{
+      display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;
+      background:var(--cream);transition:background 0.15s;
+    }
+    .trav-row:hover{background:rgba(44,24,16,0.06);}
+    .trav-dot{width:24px;height:24px;border-radius:50%;flex-shrink:0;}
+    .trav-name{flex:1;font-family:'Arvo',serif;font-size:14px;font-weight:400;}
+    .trav-initial-badge{
+      width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:800;color:#fff;flex-shrink:0;
+    }
+    .trav-action{
+      width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:13px;
+      background:transparent;color:var(--medium-brown);transition:all 0.15s;
+    }
+    .trav-action:hover{background:rgba(44,24,16,0.1);}
+    .trav-action.delete:hover{background:rgba(194,59,34,0.12);color:var(--vintage-red);}
+    .trav-form{
+      margin-top:12px;padding:14px;border-radius:12px;
+      background:var(--cream);border:1.5px solid rgba(44,24,16,0.1);
+    }
+    .trav-form-row{display:flex;gap:8px;margin-bottom:10px;}
+    .trav-form-row .add-modal-input{flex:1;}
+    .trav-form-row .add-modal-input.initial-input{flex:0 0 50px;text-align:center;}
+    .trav-color-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+    .trav-color-swatch{
+      width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;
+      transition:all 0.15s;
+    }
+    .trav-color-swatch:hover{transform:scale(1.15);}
+    .trav-color-swatch.active{border-color:var(--dark-brown);box-shadow:0 0 0 2px rgba(44,24,16,0.2);}
+    .trav-form-actions{display:flex;gap:8px;justify-content:flex-end;}
+    .trav-form-btn{
+      padding:8px 16px;border-radius:10px;border:none;cursor:pointer;
+      font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;transition:all 0.15s;
+    }
+    .trav-form-btn.save{background:var(--forest-green);color:#fff;}
+    .trav-form-btn.save:hover{background:#256025;}
+    .trav-form-btn.save:disabled{background:rgba(44,24,16,0.12);color:rgba(44,24,16,0.3);cursor:default;}
+    .trav-form-btn.cancel{background:rgba(44,24,16,0.08);color:var(--dark-brown);}
+    .trav-form-btn.cancel:hover{background:rgba(44,24,16,0.15);}
+    .trav-add-btn{
+      width:100%;margin-top:12px;padding:10px;border:1.5px dashed rgba(45,95,45,0.3);border-radius:10px;
+      background:rgba(45,95,45,0.04);color:var(--forest-green);cursor:pointer;
+      font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;transition:all 0.15s;
+    }
+    .trav-add-btn:hover{background:rgba(45,95,45,0.1);border-color:var(--forest-green);}
+    .trav-confirm{
+      padding:10px;border-radius:10px;background:rgba(194,59,34,0.06);
+      border:1.5px solid rgba(194,59,34,0.2);margin-top:8px;
+    }
+    .trav-confirm-text{font-size:13px;color:var(--dark-brown);margin-bottom:8px;}
+    .trav-confirm-actions{display:flex;gap:8px;justify-content:flex-end;}
+    .trav-form-btn.danger{background:var(--vintage-red);color:#fff;}
+    .trav-form-btn.danger:hover{background:#a83020;}
   </style>
 </head>
 <body>
@@ -940,7 +995,7 @@ function saveState() {
     mode: state.mode, hidePacked: state.hidePacked };
   try { localStorage.setItem(LS_KEY, JSON.stringify(local)); } catch(e) {}
   // Save shared state to Firebase
-  const shared = { list: PACKING_LIST, packed: [...state.packed] };
+  const shared = { list: PACKING_LIST, packed: [...state.packed], travelers: TRIP.travelers };
   _fbWriting = true;
   stateRef.set(shared).then(() => { _fbWriting = false; flashSyncFlame(); }).catch(() => { _fbWriting = false; });
 }
@@ -967,6 +1022,10 @@ function applySharedData(data) {
   }
   if (data.packed) state.packed = new Set(data.packed);
   else state.packed = new Set();
+  // Load travelers if present (backward compat: keep defaults if missing)
+  if (data.travelers && Array.isArray(data.travelers) && data.travelers.length > 0) {
+    TRIP.travelers = data.travelers;
+  }
 }
 
 // Migrate: one-time push of old localStorage data to Firebase
@@ -983,7 +1042,7 @@ function migrateFromLocalStorage() {
     }
     if (data.packed) state.packed = new Set(data.packed);
     // Push shared data to Firebase
-    const shared = { list: PACKING_LIST, packed: [...state.packed] };
+    const shared = { list: PACKING_LIST, packed: [...state.packed], travelers: TRIP.travelers };
     stateRef.set(shared);
     // Keep only local keys in localStorage going forward
     const local = { filters: data.filters || [], collapsed: data.collapsed || [],
@@ -997,6 +1056,15 @@ function migrateFromLocalStorage() {
 function loadState() { loadLocalState(); }
 
 // ===== HELPERS =====
+function emptyQ() {
+  const q = {};
+  for (const t of TRIP.travelers) q[t.id] = 0;
+  return q;
+}
+function updateGridCols() {
+  document.documentElement.style.setProperty('--grid-cols',
+    `1fr repeat(${TRIP.travelers.length}, var(--cell-size)) var(--delete-size)`);
+}
 function travelerCount(tid) {
   return PACKING_LIST.reduce((s, item) => s + (item.q[tid] || 0), 0);
 }
@@ -1060,21 +1128,19 @@ function render() {
   // Header
   h += `<div class="header">
     <div class="header-title">\u2744\ufe0f ${TRIP.name}</div>
-    <div class="header-sub">${TRIP.dates} \u2022 ${TRIP.destination} \u2022 ${TRIP.travelers.length} travelers</div>
-    <div class="header-stats" id="stats">${PACKING_LIST.length} items \u2022 ${totalPieces()} pieces total</div>
-    <svg class="mountains" viewBox="0 0 800 60" preserveAspectRatio="none">
-      <path d="M0,60 L80,25 L160,42 L240,15 L340,35 L420,8 L520,30 L600,18 L700,38 L800,22 L800,60Z" fill="rgba(45,95,45,0.25)"/>
-      <path d="M0,60 L60,35 L130,48 L210,20 L300,40 L380,18 L470,38 L560,12 L660,32 L740,20 L800,42 L800,60Z" fill="rgba(45,95,45,0.4)"/>
-      <path d="M232,18 L240,15 L248,18Z" fill="rgba(255,255,255,0.25)"/>
-      <path d="M413,11 L420,8 L427,11Z" fill="rgba(255,255,255,0.25)"/>
-      <path d="M553,15 L560,12 L567,15Z" fill="rgba(255,255,255,0.25)"/>
-    </svg>
   </div>`;
-  h += `<div class="nordic-border"></div>`;
   h += `<div class="mode-bar">
-    <span class="mode-toggle-label plan-label ${state.mode==='plan'?'active':'inactive'}">Planning</span>
-    <div class="mode-switch ${state.mode==='pack'?'pack':''}" data-mode-toggle></div>
-    <span class="mode-toggle-label pack-label ${state.mode==='pack'?'active':'inactive'}">Packing</span>
+    <div class="mode-bar-left">
+      ${state.mode==='pack'?`<button class="hide-packed-toggle ${state.hidePacked?'active':''}" data-hide-packed>${state.hidePacked?'\u2713 ':''}Hide packed</button>`:''}
+    </div>
+    <div class="mode-bar-center">
+      <span class="mode-toggle-label plan-label ${state.mode==='plan'?'active':'inactive'}">Planning</span>
+      <div class="mode-switch ${state.mode==='pack'?'pack':''}" data-mode-toggle></div>
+      <span class="mode-toggle-label pack-label ${state.mode==='pack'?'active':'inactive'}">Packing</span>
+    </div>
+    <div class="mode-bar-right">
+      <button class="manage-btn" data-manage-travelers>\ud83d\udc65 Manage</button>
+    </div>
   </div>`;
 
   // Progress bar (pack mode only)
@@ -1095,30 +1161,13 @@ function render() {
     h += `</div></div>`;
   }
 
-  // Filter bar
-  h += `<div class="filter-bar">`;
+  // Column headers (also serve as filter pills)
   const noFilter = state.activeFilters.size === 0;
-  h += `<div class="filter-chip ${noFilter?'active':''}" data-filter="all"
-    style="background:${noFilter?'var(--dark-brown)':'var(--warm-white)'};color:${noFilter?'var(--cream)':'var(--dark-brown)'};border-color:var(--dark-brown);">All<sup>${totalPieces()}</sup></div>`;
-  for (const t of TRIP.travelers) {
-    const isA = state.activeFilters.has(t.id);
-    h += `<div class="filter-chip ${isA?'active':''}" data-filter="${t.id}"
-      style="background:${isA ? t.color : t.color+'18'};color:${isA?'#fff':t.color};border-color:${t.color}${isA?'':'50'};">
-      ${t.name}<sup>${travelerCount(t.id)}</sup></div>`;
-  }
-  if (state.mode === 'pack') {
-    h += `<div class="filter-separator"></div>`;
-    h += `<div class="hide-packed-chip ${state.hidePacked?'active':''}" data-hide-packed>
-      ${state.hidePacked?'\u2713 ':''}Hide packed</div>`;
-  }
-  h += `</div>`;
-
-  // Column headers
   h += `<div class="column-headers grid-row">`;
-  h += `<div class="col-label">${state.mode==='pack'?'Pack':'Item'}</div>`;
+  h += `<div class="col-all ${noFilter?'active':''}" data-filter="all">All</div>`;
   for (const t of TRIP.travelers) {
     const dim = !isFiltered(t.id);
-    h += `<div class="col-hdr" data-traveler="${t.id}" style="background:${t.color};${dim?'opacity:0.25;transform:scale(0.85);':''}">${t.initial}</div>`;
+    h += `<div class="col-hdr" data-filter="${t.id}" data-traveler="${t.id}" style="background:${t.color};${dim?'opacity:0.25;transform:scale(0.85);':''}">${t.initial}</div>`;
   }
   h += `<div></div></div>`;
 
@@ -1185,6 +1234,7 @@ function render() {
   h += `<button class="fab" data-fab>+</button>`;
   app.innerHTML = h;
   document.body.classList.toggle('pack-mode', state.mode === 'pack');
+  updateGridCols();
 }
 
 // ===== ACTIONS =====
@@ -1196,24 +1246,12 @@ function setFilter(id) {
     else state.activeFilters.add(id);
   }
   // In pack mode, re-render since row visibility changes
-  if (state.mode === 'pack') { saveState(); render(); return; }
+  if (state.mode === 'pack') { saveState(); render(); setupDragHandlers(); return; }
   // In plan mode, do incremental DOM updates
   const noFilter = state.activeFilters.size === 0;
-  // Update chips
-  document.querySelectorAll('.filter-chip').forEach(c => {
-    const f = c.dataset.filter;
-    const isA = f === 'all' ? noFilter : state.activeFilters.has(f);
-    c.classList.toggle('active', isA);
-    if (f === 'all') {
-      c.style.background = isA ? 'var(--dark-brown)' : 'var(--warm-white)';
-      c.style.color = isA ? 'var(--cream)' : 'var(--dark-brown)';
-    } else {
-      const t = TRIP.travelers.find(t => t.id === f);
-      c.style.background = isA ? t.color : t.color + '18';
-      c.style.color = isA ? '#fff' : t.color;
-      c.style.borderColor = t.color + (isA ? '' : '50');
-    }
-  });
+  // Update "All" pill
+  const allPill = document.querySelector('.col-all');
+  if (allPill) allPill.classList.toggle('active', noFilter);
   // Update col headers
   document.querySelectorAll('.col-hdr').forEach(h => {
     const dim = !isFiltered(h.dataset.traveler);
@@ -1338,7 +1376,7 @@ function addCatalogItem(catalogId) {
     id: catalogId,
     name: catItem.name,
     cat: catItem.cat,
-    q: { steph:0, jen:0, rio:0, dahlia:0, maeve:0, shared:0 }
+    q: emptyQ()
   };
   if (catItem.sub) newItem.sub = catItem.sub;
   PACKING_LIST.push(newItem);
@@ -1386,15 +1424,7 @@ function addCatalogItem(catalogId) {
 }
 
 function updateStats() {
-  const el = document.getElementById('stats');
-  if (el) el.textContent = `${PACKING_LIST.length} items \u2022 ${totalPieces()} pieces total`;
-  // Update chip counts
-  document.querySelectorAll('.filter-chip').forEach(c => {
-    const sup = c.querySelector('sup');
-    if (!sup) return;
-    const f = c.dataset.filter;
-    sup.textContent = f === 'all' ? totalPieces() : travelerCount(f);
-  });
+  // Stats are no longer displayed in the header; kept for future use if needed
 }
 
 function updateCatCounts() {
@@ -1411,7 +1441,6 @@ function updateCatCounts() {
 function toggleMode() {
   // Anchor scroll to the first visible item row or category header
   const stickyH = (document.querySelector('.mode-bar')?.offsetHeight || 0)
-    + (document.querySelector('.filter-bar')?.offsetHeight || 0)
     + (document.querySelector('.column-headers')?.offsetHeight || 0);
   let anchorRowId = null, anchorCatId = null, anchorOffset = 0;
   for (const el of document.querySelectorAll('.item-row, .category-header')) {
@@ -1442,7 +1471,6 @@ function toggleMode() {
   }
   if (targetEl) {
     const newStickyH = (document.querySelector('.mode-bar')?.offsetHeight || 0)
-      + (document.querySelector('.filter-bar')?.offsetHeight || 0)
       + (document.querySelector('.column-headers')?.offsetHeight || 0);
     const rect = targetEl.getBoundingClientRect();
     window.scrollBy(0, rect.top - newStickyH - anchorOffset);
@@ -1489,11 +1517,11 @@ function togglePacked(itemId, tid) {
 
 function toggleHidePacked() {
   state.hidePacked = !state.hidePacked;
-  // Update chip
-  const chip = document.querySelector('[data-hide-packed]');
-  if (chip) {
-    chip.classList.toggle('active', state.hidePacked);
-    chip.textContent = (state.hidePacked ? '\u2713 ' : '') + 'Hide packed';
+  // Update toggle button
+  const btn = document.querySelector('[data-hide-packed]');
+  if (btn) {
+    btn.classList.toggle('active', state.hidePacked);
+    btn.textContent = (state.hidePacked ? '\u2713 ' : '') + 'Hide packed';
   }
   // Update all rows (respects current filter)
   document.querySelectorAll('.item-row').forEach(row => {
@@ -1545,9 +1573,14 @@ function handleClick(e) {
   // Hide-packed toggle
   const hidePacked = t.closest('[data-hide-packed]');
   if (hidePacked) { toggleHidePacked(); return; }
-  // Filter chips
-  const chip = t.closest('.filter-chip');
-  if (chip) { setFilter(chip.dataset.filter); return; }
+  // Manage travelers button
+  const manageBtn = t.closest('[data-manage-travelers]');
+  if (manageBtn) { openTravelerModal(); return; }
+  // Column header filter pills
+  const filterPill = t.closest('[data-filter]');
+  if (filterPill && (filterPill.classList.contains('col-all') || filterPill.classList.contains('col-hdr'))) {
+    setFilter(filterPill.dataset.filter); return;
+  }
   const catH = t.closest('.category-header');
   if (catH) { toggleCat(catH.dataset.cat); return; }
   // Pack mode: tap to check off (skip if long-press just opened picker)
@@ -1910,7 +1943,7 @@ function addCatalogItemFromSearch(catalogId) {
     id: catalogId,
     name: catItem.name,
     cat: catItem.cat,
-    q: { steph:0, jen:0, rio:0, dahlia:0, maeve:0, shared:0 }
+    q: emptyQ()
   };
   if (catItem.sub) newItem.sub = catItem.sub;
   PACKING_LIST.push(newItem);
@@ -1932,7 +1965,7 @@ function submitNewItemFromSearch() {
     id: 'custom-' + Date.now(),
     name: name,
     cat: _addModalCat,
-    q: { steph:0, jen:0, rio:0, dahlia:0, maeve:0, shared:0 }
+    q: emptyQ()
   };
   if (_addModalSub) newItem.sub = _addModalSub;
   PACKING_LIST.push(newItem);
@@ -2084,6 +2117,226 @@ function setupDragHandlers() {
     _pointerStartPos = null;
     if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
   });
+}
+
+// ===== TRAVELLER MANAGEMENT MODAL =====
+const TRAV_COLORS = ['#6366f1','#ec4899','#f59e0b','#10b981','#8b5cf6','#ef4444','#06b6d4','#f97316','#84cc16','#b8860b','#e879f9','#14b8a6'];
+let _travEditId = null; // null = closed, 'new' = adding, or traveler id = editing
+let _travDeleteConfirm = null; // traveler id awaiting delete confirmation
+
+function openTravelerModal() {
+  closeTravelerModal();
+  _travEditId = null;
+  _travDeleteConfirm = null;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'trav-modal-overlay';
+  overlay.addEventListener('click', closeTravelerModal);
+
+  const modal = document.createElement('div');
+  modal.className = 'trav-modal';
+  modal.addEventListener('click', (e) => e.stopPropagation());
+
+  renderTravelerModalContent(modal);
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(modal);
+}
+
+function closeTravelerModal() {
+  const overlay = document.querySelector('.trav-modal-overlay');
+  const modal = document.querySelector('.trav-modal');
+  if (overlay) overlay.remove();
+  if (modal) modal.remove();
+  _travEditId = null;
+  _travDeleteConfirm = null;
+}
+
+function renderTravelerModalContent(modal) {
+  if (!modal) modal = document.querySelector('.trav-modal');
+  if (!modal) return;
+
+  let h = `<div class="trav-modal-header">
+    <div class="trav-modal-title">Manage Travellers</div>
+    <button class="add-modal-close" data-trav-close>\u2715</button>
+  </div>`;
+  h += `<div class="trav-list">`;
+  for (const t of TRIP.travelers) {
+    h += `<div class="trav-row" data-trav-id="${t.id}">
+      <div class="trav-dot" style="background:${t.color}"></div>
+      <div class="trav-name">${t.name}</div>
+      <div class="trav-initial-badge" style="background:${t.color}">${t.initial}</div>
+      <button class="trav-action" data-trav-edit="${t.id}" title="Edit">\u270E</button>
+      <button class="trav-action delete" data-trav-delete="${t.id}" title="Remove">\u2715</button>
+    </div>`;
+    // Edit form for this traveler
+    if (_travEditId === t.id) {
+      h += renderTravelerForm(t);
+    }
+    // Delete confirmation
+    if (_travDeleteConfirm === t.id) {
+      h += `<div class="trav-confirm">
+        <div class="trav-confirm-text">Remove <strong>${t.name}</strong>? Their quantities will be cleared.</div>
+        <div class="trav-confirm-actions">
+          <button class="trav-form-btn cancel" data-trav-delete-cancel>Cancel</button>
+          <button class="trav-form-btn danger" data-trav-delete-confirm="${t.id}">Remove</button>
+        </div>
+      </div>`;
+    }
+  }
+  h += `</div>`;
+  // Add form
+  if (_travEditId === 'new') {
+    h += renderTravelerForm(null);
+  } else {
+    h += `<button class="trav-add-btn" data-trav-add>+ Add Traveller</button>`;
+  }
+
+  modal.innerHTML = h;
+  // Wire up events
+  modal.querySelector('[data-trav-close]')?.addEventListener('click', closeTravelerModal);
+  modal.querySelectorAll('[data-trav-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _travEditId = btn.dataset.travEdit;
+      _travDeleteConfirm = null;
+      renderTravelerModalContent(modal);
+    });
+  });
+  modal.querySelectorAll('[data-trav-delete]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _travDeleteConfirm = btn.dataset.travDelete;
+      _travEditId = null;
+      renderTravelerModalContent(modal);
+    });
+  });
+  modal.querySelector('[data-trav-add]')?.addEventListener('click', () => {
+    _travEditId = 'new';
+    _travDeleteConfirm = null;
+    renderTravelerModalContent(modal);
+  });
+  modal.querySelector('[data-trav-delete-cancel]')?.addEventListener('click', () => {
+    _travDeleteConfirm = null;
+    renderTravelerModalContent(modal);
+  });
+  modal.querySelectorAll('[data-trav-delete-confirm]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      removeTraveler(btn.dataset.travDeleteConfirm);
+      _travDeleteConfirm = null;
+      renderTravelerModalContent(modal);
+    });
+  });
+  // Form events
+  wireUpTravelerForm(modal);
+}
+
+function renderTravelerForm(existing) {
+  const name = existing ? existing.name : '';
+  const initial = existing ? existing.initial : '';
+  const color = existing ? existing.color : TRAV_COLORS[TRIP.travelers.length % TRAV_COLORS.length];
+  let h = `<div class="trav-form" data-trav-form>`;
+  h += `<div class="add-modal-label">Name</div>`;
+  h += `<div class="trav-form-row">
+    <input class="add-modal-input" data-trav-name value="${name}" placeholder="Traveller name" autocomplete="off">
+    <input class="add-modal-input initial-input" data-trav-initial value="${initial}" placeholder="A" maxlength="2" autocomplete="off">
+  </div>`;
+  h += `<div class="add-modal-label">Color</div>`;
+  h += `<div class="trav-color-grid">`;
+  for (const c of TRAV_COLORS) {
+    h += `<div class="trav-color-swatch ${c===color?'active':''}" data-trav-color="${c}" style="background:${c}"></div>`;
+  }
+  h += `</div>`;
+  h += `<div class="trav-form-actions">
+    <button class="trav-form-btn cancel" data-trav-form-cancel>Cancel</button>
+    <button class="trav-form-btn save" data-trav-form-save ${!name?'disabled':''}>${existing?'Save':'Add'}</button>
+  </div>`;
+  h += `</div>`;
+  return h;
+}
+
+function wireUpTravelerForm(modal) {
+  const form = modal.querySelector('[data-trav-form]');
+  if (!form) return;
+  const nameInput = form.querySelector('[data-trav-name]');
+  const initialInput = form.querySelector('[data-trav-initial]');
+  const saveBtn = form.querySelector('[data-trav-form-save]');
+  const cancelBtn = form.querySelector('[data-trav-form-cancel]');
+  let selectedColor = form.querySelector('.trav-color-swatch.active')?.dataset.travColor || TRAV_COLORS[0];
+
+  nameInput?.addEventListener('input', () => {
+    const val = nameInput.value.trim();
+    if (saveBtn) saveBtn.disabled = !val;
+    // Auto-fill initial from first letter if user hasn't manually edited it
+    if (val && initialInput && !initialInput._manualEdit) {
+      initialInput.value = val.charAt(0).toUpperCase();
+    }
+  });
+  initialInput?.addEventListener('input', () => { initialInput._manualEdit = true; });
+  form.querySelectorAll('[data-trav-color]').forEach(sw => {
+    sw.addEventListener('click', () => {
+      form.querySelectorAll('.trav-color-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      selectedColor = sw.dataset.travColor;
+    });
+  });
+  cancelBtn?.addEventListener('click', () => {
+    _travEditId = null;
+    renderTravelerModalContent(modal);
+  });
+  saveBtn?.addEventListener('click', () => {
+    const name = nameInput?.value.trim();
+    if (!name) return;
+    const initial = (initialInput?.value.trim() || name.charAt(0)).toUpperCase();
+    if (_travEditId === 'new') {
+      addTraveler(name, initial, selectedColor);
+    } else {
+      editTraveler(_travEditId, name, initial, selectedColor);
+    }
+    _travEditId = null;
+    renderTravelerModalContent(modal);
+  });
+  // Focus name input
+  setTimeout(() => nameInput?.focus(), 50);
+}
+
+function addTraveler(name, initial, color) {
+  const id = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '-' + Date.now();
+  TRIP.travelers.push({ id, name, initial, color });
+  // Add q entry for new traveler in every packing list item
+  for (const item of PACKING_LIST) {
+    if (!item.q[id]) item.q[id] = 0;
+  }
+  updateGridCols();
+  saveState();
+  render();
+  setupDragHandlers();
+}
+
+function editTraveler(id, name, initial, color) {
+  const t = TRIP.travelers.find(t => t.id === id);
+  if (!t) return;
+  t.name = name;
+  t.initial = initial;
+  t.color = color;
+  saveState();
+  render();
+  setupDragHandlers();
+}
+
+function removeTraveler(id) {
+  TRIP.travelers = TRIP.travelers.filter(t => t.id !== id);
+  // Remove quantities for this traveler from all items
+  for (const item of PACKING_LIST) {
+    delete item.q[id];
+  }
+  // Clean packed state
+  const keysToRemove = [...state.packed].filter(k => k.endsWith('-' + id));
+  keysToRemove.forEach(k => state.packed.delete(k));
+  // Clean active filters
+  state.activeFilters.delete(id);
+  updateGridCols();
+  saveState();
+  render();
+  setupDragHandlers();
 }
 
 // ===== INIT =====
