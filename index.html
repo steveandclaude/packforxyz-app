@@ -123,7 +123,14 @@
     @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
     .qty-value.pop{animation:pop 0.2s ease;}
 
-    /* Touch behavior — allow native scroll, picker uses long-press */
+    /* Pending-clear X overlay (shown when picker opens on non-zero cell) */
+    .qty-value.pending-clear{position:relative;cursor:pointer;z-index:96;}
+    .qty-value.pending-clear::after{
+      content:'\2715';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      font-size:16px;font-weight:900;color:#fff;
+      background:var(--vintage-red);
+      border-radius:6px;opacity:0.9;
+    }
 
     /* ===== NUMBER PICKER WHEEL ===== */
     .qty-picker-overlay{
@@ -1464,6 +1471,17 @@ function openQtyPicker(itemId, tid, cellEl) {
 
   // Haptic feedback on supported devices
   if (navigator.vibrate) navigator.vibrate(30);
+
+  // X overlay click: clear to 0
+  const pendingVal = cellEl.querySelector('.qty-value.pending-clear');
+  if (pendingVal) {
+    pendingVal.addEventListener('click', function clearHandler() {
+      pendingVal.removeEventListener('click', clearHandler);
+      const curVal = item.q[tid] || 0;
+      if (curVal > 0) changeQty(itemId, tid, -curVal);
+      closeQtyPicker();
+    });
+  }
 }
 
 function closeQtyPicker() {
@@ -1471,6 +1489,8 @@ function closeQtyPicker() {
   const picker = document.querySelector('.qty-picker');
   if (overlay) overlay.remove();
   if (picker) picker.remove();
+  // Remove any pending-clear X overlays
+  document.querySelectorAll('.qty-value.pending-clear').forEach(v => v.classList.remove('pending-clear'));
   _pickerOpen = false;
 }
 
@@ -1644,7 +1664,8 @@ function setupDragHandlers() {
         // Tap zero -> set to 1
         changeQty(itemId, tid, 1);
       } else {
-        // Tap any non-zero -> open picker
+        // Tap non-zero -> show X overlay + open picker
+        val.classList.add('pending-clear');
         openQtyPicker(itemId, tid, cell);
       }
     }
