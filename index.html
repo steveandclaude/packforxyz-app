@@ -101,7 +101,9 @@
     .item-row:hover{background:#FFF5E8;}
     .item-name{
       font-family:'Arvo',serif;font-size:14px;font-weight:400;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:2px;
+      overflow:hidden;padding-right:2px;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+      line-height:1.3;
     }
     @media(min-width:640px){.item-name{font-size:15px;}}
 
