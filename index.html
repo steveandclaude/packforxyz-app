@@ -14,7 +14,7 @@
       --cream: #F5EDE3; --warm-white: #FFFDF8; --dark-brown: #2C1810;
       --medium-brown: #6B4226; --light-brown: #A67B5B; --vintage-red: #C23B22;
       --forest-green: #2D5F2D; --gold: #B8860B; --charcoal: #3C3C3C;
-      --cell-size: 38px; --delete-size: 26px; --grid-gap: 4px; --side-pad: 10px;
+      --cell-size: 38px; --delete-size: 26px; --grid-gap: 4px; --side-pad: 10px; --mode-bar-h: 42px;
       --filter-h: 50px; --colhdr-h: 34px;
     }
     @media(min-width:640px){:root{--cell-size:46px;--delete-size:30px;--grid-gap:5px;--side-pad:24px;}}
@@ -54,7 +54,7 @@
 
     /* ===== FILTER BAR ===== */
     .filter-bar{
-      position:sticky;top:0;z-index:30;background:var(--cream);
+      position:sticky;top:var(--mode-bar-h);z-index:30;background:var(--cream);
       padding:8px var(--side-pad);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
       border-bottom:2px solid rgba(44,24,16,0.08);box-shadow:0 2px 8px rgba(44,24,16,0.06);
     }
@@ -68,7 +68,7 @@
 
     /* ===== COLUMN HEADERS ===== */
     .column-headers{
-      position:sticky;top:var(--filter-h);z-index:25;background:var(--cream);
+      position:sticky;top:calc(var(--mode-bar-h) + var(--filter-h));z-index:25;background:var(--cream);
       padding-top:6px;padding-bottom:6px;border-bottom:2px solid rgba(44,24,16,0.1);
     }
     .col-label{font-size:10px;color:var(--medium-brown);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
@@ -131,6 +131,13 @@
       background:var(--vintage-red);
       border-radius:6px;opacity:0.9;
     }
+    .pack-circle.pending-clear{cursor:pointer;z-index:96;}
+    .pack-circle.pending-clear::after{
+      content:'\2715';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      font-size:16px;font-weight:900;color:#fff;
+      background:var(--vintage-red);
+      border-radius:50%;opacity:0.9;
+    }
 
     /* ===== NUMBER PICKER WHEEL ===== */
     .qty-picker-overlay{
@@ -170,7 +177,7 @@
     }
     .fab:hover{transform:scale(1.08);}
     .fab:active{transform:scale(0.95);}
-    body.pack-mode .fab{display:none;}
+    /* FAB visible in both modes */
 
     /* ===== ADD ITEM MODAL ===== */
     .add-modal-overlay{
@@ -227,6 +234,50 @@
     .add-modal-submit:active{transform:scale(0.98);}
     .add-modal-submit:disabled{background:rgba(44,24,16,0.12);color:rgba(44,24,16,0.3);
       box-shadow:none;cursor:default;transform:none;}
+
+    /* ===== FAB SEARCH RESULTS ===== */
+    .search-results{margin-top:12px;}
+    .search-section-header{
+      font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
+      color:var(--medium-brown);margin:14px 0 6px;display:flex;align-items:center;gap:6px;
+    }
+    .search-section-count{font-weight:400;opacity:0.6;text-transform:none;}
+    .search-result{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      padding:8px 10px;border-radius:8px;transition:background 0.15s;
+    }
+    .search-result-info{flex:1;min-width:0;}
+    .search-result-name{font-family:'Arvo',serif;font-size:13px;font-weight:400;}
+    .search-result-meta{font-size:10px;color:var(--medium-brown);margin-top:1px;}
+    .search-jump-btn{
+      flex-shrink:0;padding:4px 10px;border-radius:12px;border:1.5px solid var(--medium-brown);
+      background:transparent;color:var(--medium-brown);font-size:11px;font-weight:700;
+      cursor:pointer;transition:all 0.15s;font-family:'Nunito',sans-serif;
+    }
+    .search-jump-btn:hover{background:var(--medium-brown);color:#fff;}
+    .search-create-row{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      padding:10px;border-radius:10px;cursor:pointer;
+      background:rgba(45,95,45,0.06);border:1.5px dashed rgba(45,95,45,0.3);
+      transition:all 0.15s;margin-top:4px;
+    }
+    .search-create-row:hover{background:rgba(45,95,45,0.12);border-color:var(--forest-green);}
+    .search-create-name{font-family:'Arvo',serif;font-size:13px;color:var(--forest-green);font-weight:700;}
+    .search-create-form{margin-top:8px;padding:10px;border-radius:10px;background:rgba(45,95,45,0.04);}
+    .search-show-more{
+      font-size:11px;color:var(--forest-green);cursor:pointer;
+      font-weight:700;padding:4px 10px;text-align:center;
+    }
+    .search-show-more:hover{text-decoration:underline;}
+    .search-helper{
+      text-align:center;padding:24px 0;color:var(--medium-brown);
+      font-size:13px;font-style:italic;
+    }
+    @keyframes highlight-flash{
+      0%{background:rgba(45,95,45,0.25);}
+      100%{background:transparent;}
+    }
+    .item-row.highlight{animation:highlight-flash 1.5s ease;}
 
     /* ===== FIREBASE SYNC INDICATOR ===== */
     .sync-flame{
@@ -296,9 +347,14 @@
     /* ===== ITEM DELETE ANIM ===== */
     .item-row.removing{opacity:0;max-height:0;padding:0;margin:0;overflow:hidden;transition:all 0.3s ease;}
 
-    /* ===== MODE TOGGLE ===== */
-    .mode-toggle{
-      display:flex;align-items:center;gap:10px;margin-top:10px;position:relative;z-index:2;
+    /* ===== MODE BAR (sticky toggle) ===== */
+    .mode-bar{
+      position:sticky;top:0;z-index:32;
+      background:var(--cream);
+      padding:8px var(--side-pad);
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      border-bottom:1px solid rgba(44,24,16,0.08);
+      box-shadow:0 1px 4px rgba(44,24,16,0.04);
     }
     .mode-toggle-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
       transition:color 0.3s,opacity 0.3s;}
@@ -307,8 +363,8 @@
     .mode-toggle-label.plan-label{color:var(--gold);}
     .mode-toggle-label.pack-label{color:#4ADE80;}
     .mode-switch{
-      width:48px;height:26px;border-radius:13px;border:2px solid rgba(255,255,255,0.25);
-      background:rgba(255,255,255,0.12);cursor:pointer;position:relative;transition:all 0.3s;
+      width:48px;height:26px;border-radius:13px;border:2px solid rgba(44,24,16,0.2);
+      background:rgba(44,24,16,0.06);cursor:pointer;position:relative;transition:all 0.3s;
       flex-shrink:0;
     }
     .mode-switch::after{
@@ -418,6 +474,7 @@
 
     /* Pack mode: hide delete buttons, show pack column label */
     body.pack-mode .del-btn{display:none;}
+    .item-row.pack-edit-row .del-btn{display:flex!important;position:relative;z-index:96;opacity:1!important;}
     body.pack-mode .see-more,body.pack-mode .add-drawer{display:none;}
 
     /* Category pack progress in header */
@@ -1005,11 +1062,6 @@ function render() {
     <div class="header-title">\u2744\ufe0f ${TRIP.name}</div>
     <div class="header-sub">${TRIP.dates} \u2022 ${TRIP.destination} \u2022 ${TRIP.travelers.length} travelers</div>
     <div class="header-stats" id="stats">${PACKING_LIST.length} items \u2022 ${totalPieces()} pieces total</div>
-    <div class="mode-toggle">
-      <span class="mode-toggle-label plan-label ${state.mode==='plan'?'active':'inactive'}">Planning</span>
-      <div class="mode-switch ${state.mode==='pack'?'pack':''}" data-mode-toggle></div>
-      <span class="mode-toggle-label pack-label ${state.mode==='pack'?'active':'inactive'}">Packing</span>
-    </div>
     <svg class="mountains" viewBox="0 0 800 60" preserveAspectRatio="none">
       <path d="M0,60 L80,25 L160,42 L240,15 L340,35 L420,8 L520,30 L600,18 L700,38 L800,22 L800,60Z" fill="rgba(45,95,45,0.25)"/>
       <path d="M0,60 L60,35 L130,48 L210,20 L300,40 L380,18 L470,38 L560,12 L660,32 L740,20 L800,42 L800,60Z" fill="rgba(45,95,45,0.4)"/>
@@ -1019,6 +1071,11 @@ function render() {
     </svg>
   </div>`;
   h += `<div class="nordic-border"></div>`;
+  h += `<div class="mode-bar">
+    <span class="mode-toggle-label plan-label ${state.mode==='plan'?'active':'inactive'}">Planning</span>
+    <div class="mode-switch ${state.mode==='pack'?'pack':''}" data-mode-toggle></div>
+    <span class="mode-toggle-label pack-label ${state.mode==='pack'?'active':'inactive'}">Packing</span>
+  </div>`;
 
   // Progress bar (pack mode only)
   if (state.mode === 'pack') {
@@ -1180,17 +1237,30 @@ function changeQty(itemId, tid, delta) {
   const cell = document.querySelector(`[data-cell="${itemId}-${tid}"]`);
   if (cell) {
     const val = cell.querySelector('.qty-value');
-    val.textContent = nv === 0 ? '\u00b7' : nv;
-    val.classList.toggle('zero', nv === 0);
-    val.classList.remove('pop');
-    void val.offsetWidth;
-    val.classList.add('pop');
+    if (val) {
+      val.textContent = nv === 0 ? '\u00b7' : nv;
+      val.classList.toggle('zero', nv === 0);
+      val.classList.remove('pop');
+      void val.offsetWidth;
+      val.classList.add('pop');
+    }
+    const circle = cell.querySelector('.pack-circle');
+    if (circle) {
+      const initial = circle.querySelector('.pack-initial');
+      if (initial) initial.textContent = nv > 0 ? nv : '';
+      cell.classList.toggle('empty', nv === 0);
+      if (nv === 0) {
+        state.packed.delete(packKey(itemId, tid));
+        circle.classList.remove('checked');
+      }
+    }
   }
   updateStats();
   saveState();
 }
 
 function deleteItem(itemId) {
+  closeQtyPicker();
   const row = document.querySelector(`[data-row="${itemId}"]`);
   if (row) {
     row.classList.add('removing');
@@ -1339,9 +1409,44 @@ function updateCatCounts() {
 
 // ===== PACK MODE ACTIONS =====
 function toggleMode() {
+  // Anchor scroll to the first visible item row or category header
+  const stickyH = (document.querySelector('.mode-bar')?.offsetHeight || 0)
+    + (document.querySelector('.filter-bar')?.offsetHeight || 0)
+    + (document.querySelector('.column-headers')?.offsetHeight || 0);
+  let anchorRowId = null, anchorCatId = null, anchorOffset = 0;
+  for (const el of document.querySelectorAll('.item-row, .category-header')) {
+    const rect = el.getBoundingClientRect();
+    if (rect.bottom > stickyH) {
+      anchorOffset = rect.top - stickyH;
+      if (el.dataset.row) anchorRowId = el.dataset.row;
+      else if (el.dataset.cat) anchorCatId = el.dataset.cat;
+      break;
+    }
+  }
+
   state.mode = state.mode === 'plan' ? 'pack' : 'plan';
   saveState();
   render();
+
+  // Restore scroll so the same element stays in the same viewport position
+  let targetEl = null;
+  if (anchorRowId) {
+    targetEl = document.querySelector(`[data-row="${anchorRowId}"]`);
+    if (!targetEl) {
+      // Row hidden in pack mode — fall back to its category header
+      const item = PACKING_LIST.find(i => i.id === anchorRowId);
+      if (item) targetEl = document.querySelector(`.category-header[data-cat="${item.cat}"]`);
+    }
+  } else if (anchorCatId) {
+    targetEl = document.querySelector(`.category-header[data-cat="${anchorCatId}"]`);
+  }
+  if (targetEl) {
+    const newStickyH = (document.querySelector('.mode-bar')?.offsetHeight || 0)
+      + (document.querySelector('.filter-bar')?.offsetHeight || 0)
+      + (document.querySelector('.column-headers')?.offsetHeight || 0);
+    const rect = targetEl.getBoundingClientRect();
+    window.scrollBy(0, rect.top - newStickyH - anchorOffset);
+  }
 }
 
 function togglePacked(itemId, tid) {
@@ -1445,9 +1550,10 @@ function handleClick(e) {
   if (chip) { setFilter(chip.dataset.filter); return; }
   const catH = t.closest('.category-header');
   if (catH) { toggleCat(catH.dataset.cat); return; }
-  // Pack mode: tap to check off
+  // Pack mode: tap to check off (skip if long-press just opened picker)
   const packCell = t.closest('.pack-cell');
   if (packCell && !packCell.classList.contains('empty')) {
+    if (_packLongPressActivated) { _packLongPressActivated = false; return; }
     togglePacked(packCell.dataset.packItem, packCell.dataset.packTid);
     return;
   }
@@ -1467,6 +1573,7 @@ function handleClick(e) {
 // ===== QTY PICKER & TAP-TO-TOGGLE (Plan mode) =====
 let _longPressTimer = null;
 let _pickerOpen = false;
+let _packLongPressActivated = false;
 
 function openQtyPicker(itemId, tid, cellEl) {
   closeQtyPicker();
@@ -1530,17 +1637,32 @@ function closeQtyPicker() {
   if (overlay) overlay.remove();
   if (picker) picker.remove();
   removePendingClear();
+  document.querySelectorAll('.item-row.pack-edit-row').forEach(r => r.classList.remove('pack-edit-row'));
+  _packLongPressActivated = false;
   _pickerOpen = false;
 }
 
-// ===== ADD CUSTOM ITEM MODAL =====
+// ===== ADD ITEM MODAL (SMART SEARCH) =====
 let _addModalCat = null;
 let _addModalSub = null;
+let _searchDebounceTimer = null;
+let _searchExpanded = { list: false, catalog: false };
+let _createNewExpanded = false;
+
+function highlightMatch(text, query) {
+  const idx = text.toLowerCase().indexOf(query);
+  if (idx === -1) return text;
+  return text.slice(0, idx) +
+    '<mark style="background:rgba(45,95,45,0.2);padding:0 1px;border-radius:2px;">' +
+    text.slice(idx, idx + query.length) + '</mark>' + text.slice(idx + query.length);
+}
 
 function openAddModal() {
   closeAddModal();
   _addModalCat = null;
   _addModalSub = null;
+  _createNewExpanded = false;
+  _searchExpanded = { list: false, catalog: false };
 
   const overlay = document.createElement('div');
   overlay.className = 'add-modal-overlay';
@@ -1552,89 +1674,260 @@ function openAddModal() {
 
   modal.innerHTML = `
     <div class="add-modal-header">
-      <div class="add-modal-title">Add New Item</div>
+      <div class="add-modal-title">Add Item</div>
       <button class="add-modal-close" data-add-close>\u2715</button>
     </div>
-    <div class="add-modal-label">Item Name</div>
-    <input class="add-modal-input" placeholder="e.g. Headlamp, Yoga mat..." data-add-name>
-    <div class="add-modal-label">Category</div>
-    <div class="add-modal-chips" data-add-cats>
-      ${CATS.map(c => `<div class="add-modal-chip" data-add-cat-pick="${c.id}">${c.emoji} ${c.id}</div>`).join('')}
+    <input class="add-modal-input" placeholder="Search items or create new\u2026" data-add-name>
+    <div class="search-results" data-search-results>
+      <div class="search-helper">Type to search your list, the catalog, or create something new</div>
     </div>
-    <div data-add-sub-section style="display:none">
-      <div class="add-modal-label">Subcategory <span style="opacity:0.5;font-weight:400;text-transform:none">(optional)</span></div>
-      <div class="add-modal-chips" data-add-subs></div>
-    </div>
-    <button class="add-modal-submit" data-add-submit disabled>Add Item</button>
   `;
 
   document.body.appendChild(overlay);
   document.body.appendChild(modal);
 
-  // Focus name input
   const input = modal.querySelector('[data-add-name]');
   setTimeout(() => input.focus(), 50);
 
-  // Update submit state on input
-  input.addEventListener('input', updateAddSubmit);
-
-  // Category chip clicks
-  modal.querySelector('[data-add-cats]').addEventListener('click', (e) => {
-    const chip = e.target.closest('[data-add-cat-pick]');
-    if (!chip) return;
-    const catId = chip.dataset.addCatPick;
-    _addModalCat = catId;
-    _addModalSub = null;
-    // Update active states
-    modal.querySelectorAll('[data-add-cat-pick]').forEach(c => c.classList.toggle('active', c.dataset.addCatPick === catId));
-    // Show subcategories if they exist
-    const subSection = modal.querySelector('[data-add-sub-section]');
-    const subContainer = modal.querySelector('[data-add-subs]');
-    const subs = SUBCATEGORY_ORDER[catId];
-    if (subs && subs.length > 0) {
-      subSection.style.display = '';
-      subContainer.innerHTML = subs.map(s => `<div class="add-modal-chip" data-add-sub-pick="${s}">${s}</div>`).join('');
-      subContainer.addEventListener('click', (ev) => {
-        const sc = ev.target.closest('[data-add-sub-pick]');
-        if (!sc) return;
-        const sub = sc.dataset.addSubPick;
-        _addModalSub = _addModalSub === sub ? null : sub; // toggle
-        subContainer.querySelectorAll('[data-add-sub-pick]').forEach(c => c.classList.toggle('active', c.dataset.addSubPick === _addModalSub));
-      });
-    } else {
-      subSection.style.display = 'none';
-      subContainer.innerHTML = '';
-    }
-    updateAddSubmit();
+  input.addEventListener('input', () => {
+    clearTimeout(_searchDebounceTimer);
+    _searchDebounceTimer = setTimeout(() => {
+      renderSearchResults(input.value.trim());
+    }, 200);
   });
 
-  // Close button
   modal.querySelector('[data-add-close]').addEventListener('click', closeAddModal);
-
-  // Submit
-  modal.querySelector('[data-add-submit]').addEventListener('click', submitNewItem);
+  modal.addEventListener('click', handleSearchResultClick);
 }
 
-function closeAddModal() {
-  const overlay = document.querySelector('.add-modal-overlay');
-  const modal = document.querySelector('.add-modal');
-  if (overlay) overlay.remove();
-  if (modal) modal.remove();
+function renderSearchResults(query) {
+  const container = document.querySelector('[data-search-results]');
+  if (!container) return;
+
+  _createNewExpanded = false;
+  _addModalCat = null;
+  _addModalSub = null;
+
+  if (!query || query.length < 2) {
+    container.innerHTML = '<div class="search-helper">Type to search your list, the catalog, or create something new</div>';
+    return;
+  }
+
+  const q = query.toLowerCase();
+  let html = '';
+
+  // Section 1: Already in your list
+  const inList = PACKING_LIST.filter(i => i.name.toLowerCase().includes(q));
+  if (inList.length > 0) {
+    const showAll = _searchExpanded.list;
+    const display = showAll ? inList : inList.slice(0, 8);
+    html += `<div class="search-section-header">Already in your list <span class="search-section-count">(${inList.length})</span></div>`;
+    for (const item of display) {
+      const cat = CATS.find(c => c.id === item.cat);
+      html += `<div class="search-result" data-search-jump="${item.id}">
+        <div class="search-result-info">
+          <div class="search-result-name">${highlightMatch(item.name, q)}</div>
+          <div class="search-result-meta">${cat ? cat.emoji + ' ' : ''}${item.cat}${item.sub ? ' \u203a ' + item.sub : ''}</div>
+        </div>
+        <button class="search-jump-btn" data-search-jump="${item.id}">Jump to</button>
+      </div>`;
+    }
+    if (inList.length > 8 && !showAll) {
+      html += `<div class="search-show-more" data-search-more="list">Show all ${inList.length} results\u2026</div>`;
+    }
+  }
+
+  // Section 2: Add from catalog
+  const existingIds = new Set(PACKING_LIST.map(i => i.id));
+  const existingKeys = new Set(PACKING_LIST.map(i => i.name.toLowerCase() + '||' + i.cat));
+  const fromCatalog = CATALOG.filter(c => {
+    if (existingIds.has(c.id)) return false;
+    if (existingKeys.has(c.name.toLowerCase() + '||' + c.cat)) return false;
+    return c.name.toLowerCase().includes(q);
+  });
+  if (fromCatalog.length > 0) {
+    const showAll = _searchExpanded.catalog;
+    const display = showAll ? fromCatalog : fromCatalog.slice(0, 8);
+    html += `<div class="search-section-header">Add from catalog <span class="search-section-count">(${fromCatalog.length})</span></div>`;
+    for (const item of display) {
+      const cat = CATS.find(c => c.id === item.cat);
+      html += `<div class="search-result">
+        <div class="search-result-info">
+          <div class="search-result-name">${highlightMatch(item.name, q)}</div>
+          <div class="search-result-meta">${cat ? cat.emoji + ' ' : ''}${item.cat}${item.sub ? ' \u203a ' + item.sub : ''}</div>
+        </div>
+        <button class="add-item-btn" data-search-add="${item.id}">+</button>
+      </div>`;
+    }
+    if (fromCatalog.length > 8 && !showAll) {
+      html += `<div class="search-show-more" data-search-more="catalog">Show all ${fromCatalog.length} results\u2026</div>`;
+    }
+  }
+
+  // Section 3: Create new
+  html += `<div class="search-section-header">Create new</div>`;
+  html += `<div class="search-create-row" data-search-create>
+    <div class="search-create-name">+ Create \u201c${query}\u201d</div>
+  </div>`;
+
+  // No matches message
+  if (inList.length === 0 && fromCatalog.length === 0) {
+    html = `<div class="search-helper" style="padding:12px 0;">No matches found in your list or catalog</div>` + html;
+  }
+
+  container.innerHTML = html;
 }
 
-function updateAddSubmit() {
-  const modal = document.querySelector('.add-modal');
-  if (!modal) return;
-  const name = modal.querySelector('[data-add-name]').value.trim();
-  const btn = modal.querySelector('[data-add-submit]');
-  btn.disabled = !name || !_addModalCat;
+function renderCreateNewForm(query) {
+  let html = '<div class="search-create-form">';
+  html += '<div class="add-modal-label">Category</div>';
+  html += '<div class="add-modal-chips">';
+  html += CATS.map(c =>
+    `<div class="add-modal-chip ${_addModalCat === c.id ? 'active' : ''}" data-search-cat-pick="${c.id}">${c.emoji} ${c.id}</div>`
+  ).join('');
+  html += '</div>';
+  if (_addModalCat) {
+    const subs = SUBCATEGORY_ORDER[_addModalCat];
+    if (subs && subs.length > 0) {
+      html += '<div class="add-modal-label">Subcategory <span style="opacity:0.5;font-weight:400;text-transform:none">(optional)</span></div>';
+      html += '<div class="add-modal-chips">';
+      html += subs.map(s =>
+        `<div class="add-modal-chip ${_addModalSub === s ? 'active' : ''}" data-search-sub-pick="${s}">${s}</div>`
+      ).join('');
+      html += '</div>';
+    }
+  }
+  html += `<button class="add-modal-submit" data-search-submit ${!_addModalCat ? 'disabled' : ''}>Add \u201c${query}\u201d to ${_addModalCat || '\u2026'}</button>`;
+  html += '</div>';
+  return html;
 }
 
-function submitNewItem() {
-  const modal = document.querySelector('.add-modal');
-  if (!modal) return;
-  const name = modal.querySelector('[data-add-name]').value.trim();
+function handleSearchResultClick(e) {
+  const t = e.target;
+
+  // Jump to item in list
+  const jumpBtn = t.closest('[data-search-jump]');
+  if (jumpBtn) {
+    jumpToItem(jumpBtn.dataset.searchJump);
+    return;
+  }
+
+  // Add from catalog
+  const addBtn = t.closest('[data-search-add]');
+  if (addBtn) {
+    addCatalogItemFromSearch(addBtn.dataset.searchAdd);
+    return;
+  }
+
+  // Show more results
+  const moreBtn = t.closest('[data-search-more]');
+  if (moreBtn) {
+    _searchExpanded[moreBtn.dataset.searchMore] = true;
+    const input = document.querySelector('.add-modal [data-add-name]');
+    if (input) renderSearchResults(input.value.trim());
+    return;
+  }
+
+  // Create new - expand form
+  const createBtn = t.closest('[data-search-create]');
+  if (createBtn && !_createNewExpanded) {
+    _createNewExpanded = true;
+    const input = document.querySelector('.add-modal [data-add-name]');
+    if (!input) return;
+    const query = input.value.trim();
+    // Append the create form after the create row
+    const container = document.querySelector('[data-search-results]');
+    if (!container) return;
+    const formHtml = renderCreateNewForm(query);
+    createBtn.insertAdjacentHTML('afterend', formHtml);
+    return;
+  }
+
+  // Category chip in create form
+  const catChip = t.closest('[data-search-cat-pick]');
+  if (catChip) {
+    _addModalCat = catChip.dataset.searchCatPick;
+    _addModalSub = null;
+    const input = document.querySelector('.add-modal [data-add-name]');
+    if (!input) return;
+    const query = input.value.trim();
+    // Re-render just the create form
+    const form = document.querySelector('.search-create-form');
+    if (form) {
+      form.outerHTML = renderCreateNewForm(query);
+    }
+    return;
+  }
+
+  // Subcategory chip in create form
+  const subChip = t.closest('[data-search-sub-pick]');
+  if (subChip) {
+    const sub = subChip.dataset.searchSubPick;
+    _addModalSub = (_addModalSub === sub) ? null : sub;
+    const input = document.querySelector('.add-modal [data-add-name]');
+    if (!input) return;
+    const query = input.value.trim();
+    const form = document.querySelector('.search-create-form');
+    if (form) {
+      form.outerHTML = renderCreateNewForm(query);
+    }
+    return;
+  }
+
+  // Submit new item
+  const submitBtn = t.closest('[data-search-submit]');
+  if (submitBtn && !submitBtn.disabled) {
+    submitNewItemFromSearch();
+    return;
+  }
+}
+
+function jumpToItem(itemId) {
+  closeAddModal();
+  const item = PACKING_LIST.find(i => i.id === itemId);
+  if (!item) return;
+
+  // Uncollapse category if collapsed
+  if (state.collapsed.has(item.cat)) {
+    toggleCat(item.cat);
+  }
+
+  requestAnimationFrame(() => {
+    const row = document.querySelector(`[data-row="${itemId}"]`);
+    if (!row) return;
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row.classList.add('highlight');
+    setTimeout(() => row.classList.remove('highlight'), 1500);
+  });
+}
+
+function addCatalogItemFromSearch(catalogId) {
+  const catItem = CATALOG.find(c => c.id === catalogId);
+  if (!catItem) return;
+  if (PACKING_LIST.some(i => i.name === catItem.name && i.cat === catItem.cat)) return;
+
+  const newItem = {
+    id: catalogId,
+    name: catItem.name,
+    cat: catItem.cat,
+    q: { steph:0, jen:0, rio:0, dahlia:0, maeve:0, shared:0 }
+  };
+  if (catItem.sub) newItem.sub = catItem.sub;
+  PACKING_LIST.push(newItem);
+  closeAddModal();
+  if (state.mode === 'pack') { state.mode = 'plan'; }
+  saveState();
+  render();
+  setupDragHandlers();
+  jumpToItem(newItem.id);
+}
+
+function submitNewItemFromSearch() {
+  const input = document.querySelector('.add-modal [data-add-name]');
+  if (!input) return;
+  const name = input.value.trim();
   if (!name || !_addModalCat) return;
+
   const newItem = {
     id: 'custom-' + Date.now(),
     name: name,
@@ -1644,25 +1937,32 @@ function submitNewItem() {
   if (_addModalSub) newItem.sub = _addModalSub;
   PACKING_LIST.push(newItem);
   closeAddModal();
+  if (state.mode === 'pack') { state.mode = 'plan'; }
   saveState();
   render();
   setupDragHandlers();
-  // Scroll to the category
-  const catEl = document.querySelector(`[data-category="${_addModalCat}"]`);
-  if (catEl) catEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  jumpToItem(newItem.id);
+}
+
+function closeAddModal() {
+  clearTimeout(_searchDebounceTimer);
+  const overlay = document.querySelector('.add-modal-overlay');
+  const modal = document.querySelector('.add-modal');
+  if (overlay) overlay.remove();
+  if (modal) modal.remove();
 }
 
 let _pendingClearEl = null;
 let _pendingClearHandler = null;
 function addPendingClear(itemId, tid, cellEl) {
   removePendingClear(); // clean up any previous handler
-  const val = cellEl.querySelector('.qty-value');
+  const val = cellEl.querySelector('.qty-value') || cellEl.querySelector('.pack-circle');
   if (!val) return;
   val.classList.add('pending-clear');
-  const addedAt = Date.now();
+  let firstClick = true;
   _pendingClearEl = val;
   _pendingClearHandler = function(e) {
-    if (Date.now() - addedAt < 300) return; // ignore click from the same tap
+    if (firstClick) { firstClick = false; return; } // ignore click from the triggering interaction
     e.stopPropagation();
     const item = PACKING_LIST.find(i => i.id === itemId);
     const curVal = item ? (item.q[tid] || 0) : 0;
@@ -1675,7 +1975,7 @@ function removePendingClear() {
   if (_pendingClearEl && _pendingClearHandler) {
     _pendingClearEl.removeEventListener('click', _pendingClearHandler);
   }
-  document.querySelectorAll('.qty-value.pending-clear').forEach(v => v.classList.remove('pending-clear'));
+  document.querySelectorAll('.qty-value.pending-clear, .pack-circle.pending-clear').forEach(v => v.classList.remove('pending-clear'));
   _pendingClearEl = null;
   _pendingClearHandler = null;
 }
@@ -1689,29 +1989,45 @@ function setupDragHandlers() {
 
   app.addEventListener('pointerdown', (e) => {
     _pointerStartPos = { x: e.clientX, y: e.clientY };
-    if (state.mode !== 'plan') return;
     if (_pickerOpen) return;
-    const cell = e.target.closest('.qty-cell');
-    if (!cell || cell.classList.contains('dimmed')) return;
-    const val = cell.querySelector('.qty-value');
-    if (!val) return;
-    const itemId = val.dataset.item;
-    const tid = val.dataset.tid;
-    if (!itemId || !tid) return;
 
-    // Start long-press timer (cancelled if finger moves >10px = scroll)
-    _longPressTimer = setTimeout(() => {
-      _longPressTimer = null;
-      const item = PACKING_LIST.find(i => i.id === itemId);
-      if (!item) return;
-      const v = item.q[tid] || 0;
-      if (v === 0) {
-        changeQty(itemId, tid, 1);
-      } else {
+    if (state.mode === 'plan') {
+      const cell = e.target.closest('.qty-cell');
+      if (!cell || cell.classList.contains('dimmed')) return;
+      const val = cell.querySelector('.qty-value');
+      if (!val) return;
+      const itemId = val.dataset.item;
+      const tid = val.dataset.tid;
+      if (!itemId || !tid) return;
+
+      _longPressTimer = setTimeout(() => {
+        _longPressTimer = null;
+        const item = PACKING_LIST.find(i => i.id === itemId);
+        if (!item) return;
+        const v = item.q[tid] || 0;
+        if (v === 0) {
+          changeQty(itemId, tid, 1);
+        } else {
+          openQtyPicker(itemId, tid, cell);
+          addPendingClear(itemId, tid, cell);
+        }
+      }, 500);
+    } else if (state.mode === 'pack') {
+      const cell = e.target.closest('.pack-cell');
+      if (!cell || cell.classList.contains('dimmed') || cell.classList.contains('empty')) return;
+      const itemId = cell.dataset.packItem;
+      const tid = cell.dataset.packTid;
+      if (!itemId || !tid) return;
+
+      _longPressTimer = setTimeout(() => {
+        _longPressTimer = null;
+        _packLongPressActivated = true;
         openQtyPicker(itemId, tid, cell);
         addPendingClear(itemId, tid, cell);
-      }
-    }, 500);
+        const row = cell.closest('.item-row');
+        if (row) row.classList.add('pack-edit-row');
+      }, 500);
+    }
   });
 
   // Cancel long-press only if finger moves >10px (real scroll, not micro-jitter)
@@ -1728,8 +2044,13 @@ function setupDragHandlers() {
 
   app.addEventListener('pointerup', (e) => {
     _pointerStartPos = null;
-    if (state.mode !== 'plan') return;
     if (_pickerOpen) return;
+    if (state.mode === 'pack') {
+      // In pack mode, cancel long-press timer on tap; click handler does togglePacked
+      if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+      return;
+    }
+    if (state.mode !== 'plan') return;
 
     // If long-press timer still active, it was a tap
     if (_longPressTimer) {
