@@ -228,6 +228,14 @@
     .add-modal-submit:disabled{background:rgba(44,24,16,0.12);color:rgba(44,24,16,0.3);
       box-shadow:none;cursor:default;transform:none;}
 
+    /* ===== FIREBASE SYNC INDICATOR ===== */
+    .sync-flame{
+      position:fixed;top:10px;right:10px;z-index:100;
+      font-size:18px;opacity:0;transition:opacity 0.15s;pointer-events:none;
+      filter:drop-shadow(0 0 4px rgba(255,160,0,0.5));
+    }
+    .sync-flame.flash{opacity:1;}
+
     /* ===== DELETE ===== */
     .del-btn{
       width:var(--delete-size);height:var(--delete-size);display:flex;align-items:center;justify-content:center;
@@ -853,6 +861,22 @@ let _fbWriting = false;  // guard to ignore our own writes
 
 // Shared state (synced across devices): packing list + packed items
 // Local state (per-device): filters, collapsed, mode, hidePacked
+
+// Sync indicator — flame flashes on Firebase write
+let _syncFlameEl = null;
+let _syncFlameTimer = null;
+function flashSyncFlame() {
+  if (!_syncFlameEl) {
+    _syncFlameEl = document.createElement('div');
+    _syncFlameEl.className = 'sync-flame';
+    _syncFlameEl.textContent = '\uD83D\uDD25';
+    document.body.appendChild(_syncFlameEl);
+  }
+  _syncFlameEl.classList.add('flash');
+  if (_syncFlameTimer) clearTimeout(_syncFlameTimer);
+  _syncFlameTimer = setTimeout(() => { _syncFlameEl.classList.remove('flash'); _syncFlameTimer = null; }, 600);
+}
+
 function saveState() {
   // Save local-only state to localStorage
   const local = { filters: [...state.activeFilters], collapsed: [...state.collapsed],
@@ -861,7 +885,7 @@ function saveState() {
   // Save shared state to Firebase
   const shared = { list: PACKING_LIST, packed: [...state.packed] };
   _fbWriting = true;
-  stateRef.set(shared).then(() => { _fbWriting = false; }).catch(() => { _fbWriting = false; });
+  stateRef.set(shared).then(() => { _fbWriting = false; flashSyncFlame(); }).catch(() => { _fbWriting = false; });
 }
 
 function loadLocalState() {
