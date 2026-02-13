@@ -129,8 +129,7 @@
       background:color-mix(in srgb,var(--tc) 18%,var(--warm-white));
       border-radius:5px;opacity:0.85;
     }
-    /* Touch behavior */
-    .qty-cell{touch-action:none;}
+    /* Touch behavior — allow native scroll, picker uses long-press */
 
     /* ===== NUMBER PICKER WHEEL ===== */
     .qty-picker-overlay{
@@ -1421,13 +1420,17 @@ function setupDragHandlers() {
     const itemId = val.dataset.item;
     const tid = val.dataset.tid;
     if (!itemId || !tid) return;
-    e.preventDefault();
 
-    // Start long-press timer
+    // Start long-press timer (cancelled if finger moves = scroll)
     _longPressTimer = setTimeout(() => {
       _longPressTimer = null;
       openQtyPicker(itemId, tid, cell);
     }, 300);
+  });
+
+  // Cancel long-press if finger moves (user is scrolling)
+  app.addEventListener('pointermove', () => {
+    if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
   });
 
   app.addEventListener('pointerup', (e) => {
