@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Arvo:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <style>
     :root {
       --cream: #F5EDE3; --warm-white: #FFFDF8; --dark-brown: #2C1810;
@@ -539,6 +540,20 @@
     .trav-form-btn.danger:hover{background:#a83020;}
 
     /* ===== TRIP MANAGEMENT MODAL ===== */
+    /* Sign-in screen */
+    .sign-in-screen{position:fixed;inset:0;z-index:200;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;}
+    .sign-in-screen h1{font-family:'Righteous',cursive;font-size:2rem;color:var(--dark-brown);margin:0;}
+    .sign-in-screen p{font-family:'Nunito',sans-serif;color:var(--medium-brown);margin:0;font-size:0.95rem;}
+    .sign-in-btn{
+      display:flex;align-items:center;gap:12px;padding:12px 28px;border:2px solid var(--light-brown);
+      border-radius:12px;background:var(--warm-white);cursor:pointer;font-family:'Nunito',sans-serif;
+      font-size:1rem;font-weight:700;color:var(--dark-brown);transition:background 0.15s;
+    }
+    .sign-in-btn:hover{background:var(--cream);}
+    .sign-in-btn img{width:20px;height:20px;}
+    .sign-out-link{font-size:0.75rem;color:var(--light-brown);cursor:pointer;text-decoration:underline;margin-top:2px;}
+    .sign-out-link:hover{color:var(--medium-brown);}
+
     .trip-modal-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0.35);}
     .trip-modal{
       position:fixed;top:10vh;left:8px;right:8px;z-index:95;
@@ -911,6 +926,7 @@ firebase.initializeApp({
   appId: "1:17448904137:web:e8ce3b5e6e9768977c7418"
 });
 const db = firebase.database();
+const auth = firebase.auth();
 const tripIndexRef = db.ref('tripIndex');
 let stateRef = null;       // points to trips/{id}, set by switchTrip()
 let currentTripId = null;  // active trip ID
@@ -2476,10 +2492,19 @@ function renderTripModalContent(modal) {
     h += `<button class="trav-add-btn" data-trip-add>+ New Trip</button>`;
   }
 
+  // Sign out link at the bottom
+  const user = auth.currentUser;
+  if (user) {
+    h += `<div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5ddd4;text-align:center;">
+      <span class="sign-out-link" data-sign-out>Sign out (${user.email})</span>
+    </div>`;
+  }
+
   modal.innerHTML = h;
 
   // Wire up events
   modal.querySelector('[data-trip-close]')?.addEventListener('click', closeTripModal);
+  modal.querySelector('[data-sign-out]')?.addEventListener('click', () => { closeTripModal(); doSignOut(); });
 
   // Switch trip — tap the row
   modal.querySelectorAll('[data-trip-switch]').forEach(row => {
@@ -2572,38 +2597,98 @@ function renderTripModalContent(modal) {
   });
 }
 
-// ===== INIT =====
-loadLocalState();
+// ===== AUTH =====
+function showSignIn() {
+  // Remove existing sign-in screen if any
+  const existing = document.querySelector('.sign-in-screen');
+  if (existing) existing.remove();
+  const screen = document.createElement('div');
+  screen.className = 'sign-in-screen';
+  screen.innerHTML = `
+    <h1>Pack for XYZ</h1>
+    <p>Sign in to access your trips</p>
+    <button class="sign-in-btn" onclick="doSignIn()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      Sign in with Google
+    </button>
+  `;
+  document.body.appendChild(screen);
+  document.getElementById('app').style.display = 'none';
+}
 
-// Register event handlers once
-document.getElementById('app').addEventListener('click', handleClick);
-document.getElementById('app').addEventListener('input', (e) => {
-  const search = e.target.closest('.add-drawer-search');
-  if (search) renderDrawerList(search.dataset.searchCat, search.value);
-});
-
-// Render immediately with whatever local data we have
-render();
-
-if (currentTripId) {
-  // Resume last trip
-  switchTrip(currentTripId);
-} else {
-  // First load — check if any trips exist in Firebase
-  tripIndexRef.once('value', (snap) => {
-    const trips = snap.val();
-    if (trips) {
-      // Pick the most recently created trip
-      const sorted = Object.entries(trips).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-      switchTrip(sorted[0][0]);
-    } else {
-      // No trips in Firebase — register the current hardcoded trip
-      const migrationId = 'a3d7e9f1b2c4086d5e3f7a9b1c2d4e6f';
-      tripIndexRef.child(migrationId).set({ name: TRIP.name, createdAt: Date.now() });
-      switchTrip(migrationId);
-    }
+function doSignIn() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => {
+    console.error('Sign-in error:', err);
+    alert('Sign-in failed: ' + err.message);
   });
 }
+
+function doSignOut() {
+  if (stateRef) stateRef.off('value', _onTripSnapshot);
+  stateRef = null;
+  currentTripId = null;
+  _fbReady = false;
+  PACKING_LIST = [];
+  state.packed = new Set();
+  TRIP.travelers = [];
+  TRIP.name = '';
+  auth.signOut();
+}
+
+// ===== INIT =====
+let _appInitialized = false;
+
+function initApp() {
+  if (_appInitialized) return;
+  _appInitialized = true;
+
+  loadLocalState();
+
+  // Register event handlers once
+  document.getElementById('app').addEventListener('click', handleClick);
+  document.getElementById('app').addEventListener('input', (e) => {
+    const search = e.target.closest('.add-drawer-search');
+    if (search) renderDrawerList(search.dataset.searchCat, search.value);
+  });
+
+  // Render immediately with whatever local data we have
+  render();
+
+  if (currentTripId) {
+    // Resume last trip
+    switchTrip(currentTripId);
+  } else {
+    // First load — check if any trips exist in Firebase
+    tripIndexRef.once('value', (snap) => {
+      const trips = snap.val();
+      if (trips) {
+        // Pick the most recently created trip
+        const sorted = Object.entries(trips).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+        switchTrip(sorted[0][0]);
+      } else {
+        // No trips in Firebase — register the current hardcoded trip
+        const migrationId = 'a3d7e9f1b2c4086d5e3f7a9b1c2d4e6f';
+        tripIndexRef.child(migrationId).set({ name: TRIP.name, createdAt: Date.now() });
+        switchTrip(migrationId);
+      }
+    });
+  }
+}
+
+// Gate everything behind auth
+auth.onAuthStateChanged((user) => {
+  const signInScreen = document.querySelector('.sign-in-screen');
+  if (user) {
+    // Signed in — remove sign-in screen, show app
+    if (signInScreen) signInScreen.remove();
+    document.getElementById('app').style.display = '';
+    initApp();
+  } else {
+    // Not signed in — show sign-in screen
+    showSignIn();
+  }
+});
 </script>
 </body>
 </html>
