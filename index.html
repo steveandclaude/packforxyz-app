@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pack for XYZ — Airbnb Weekend</title>
+  <title>Pack for XYZ — Dallas Work Trip</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Arvo:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -537,6 +537,51 @@
     .trav-confirm-actions{display:flex;gap:8px;justify-content:flex-end;}
     .trav-form-btn.danger{background:var(--vintage-red);color:#fff;}
     .trav-form-btn.danger:hover{background:#a83020;}
+
+    /* ===== TRIP MANAGEMENT MODAL ===== */
+    .trip-modal-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0.35);}
+    .trip-modal{
+      position:fixed;top:10vh;left:8px;right:8px;z-index:95;
+      background:var(--warm-white);border-radius:16px;
+      padding:20px 20px 28px;max-height:80vh;overflow-y:auto;
+      box-shadow:0 4px 24px rgba(0,0,0,0.2);
+    }
+    @media(min-width:480px){.trip-modal{left:50%;right:auto;transform:translateX(-50%);width:400px;}}
+    .trip-modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+    .trip-modal-title{font-family:'Arvo',serif;font-size:16px;font-weight:700;color:var(--dark-brown);}
+    .trip-list{display:flex;flex-direction:column;gap:4px;}
+    .trip-row{
+      display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+      background:var(--cream);transition:background 0.15s;cursor:pointer;
+    }
+    .trip-row:hover{background:rgba(44,24,16,0.06);}
+    .trip-row.current{background:rgba(45,95,45,0.08);border:1.5px solid rgba(45,95,45,0.25);}
+    .trip-row-name{flex:1;font-family:'Arvo',serif;font-size:14px;font-weight:400;}
+    .trip-row.current .trip-row-name{font-weight:700;color:var(--forest-green);}
+    .trip-row-badge{
+      font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;
+      background:var(--forest-green);color:#fff;
+    }
+    .trip-action{
+      width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:13px;
+      background:transparent;color:var(--medium-brown);transition:all 0.15s;
+    }
+    .trip-action:hover{background:rgba(44,24,16,0.1);}
+    .trip-action.delete:hover{background:rgba(194,59,34,0.12);color:var(--vintage-red);}
+    .trip-form{
+      margin-top:12px;padding:14px;border-radius:12px;
+      background:var(--cream);border:1.5px solid rgba(44,24,16,0.1);
+    }
+    .trip-form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px;}
+    .trip-confirm{
+      padding:10px;border-radius:10px;background:rgba(194,59,34,0.06);
+      border:1.5px solid rgba(194,59,34,0.2);margin-top:8px;
+    }
+    .trip-confirm-text{font-size:13px;color:var(--dark-brown);margin-bottom:8px;}
+    .trip-confirm-actions{display:flex;gap:8px;justify-content:flex-end;}
+    .header{cursor:pointer;}
+    .trip-chevron{font-size:14px;opacity:0.5;margin-left:4px;}
   </style>
 </head>
 <body>
@@ -544,15 +589,10 @@
 <script>
 // ===== TRIP DATA =====
 const TRIP = {
-  name: "Airbnb Weekend", dates: "Fri\u2013Mon", destination: "Cold/Snow Airbnb",
-  duration: 4, nights: 3,
+  name: "Dallas Work Trip", dates: "Mon\u2013Fri", destination: "Dallas, TX",
+  duration: 5, nights: 4,
   travelers: [
-    { id:"shared", name:"Shared", initial:"\u2605", color:"#b8860b" },
-    { id:"steph", name:"Steph", initial:"S", color:"#6366f1" },
-    { id:"jen", name:"Jen", initial:"J", color:"#ec4899" },
-    { id:"rio", name:"Rio", initial:"R", color:"#f59e0b" },
-    { id:"dahlia", name:"Dahlia", initial:"D", color:"#10b981" },
-    { id:"maeve", name:"Maeve", initial:"M", color:"#8b5cf6" }
+    { id:"steph", name:"Steph", initial:"S", color:"#6366f1" }
   ]
 };
 const CATS = [
@@ -634,104 +674,8 @@ const SUBCATEGORY_ICONS_BY_CAT = {
 };
 
 // ===== PACKING LIST DATA — START =====
-// Source: data/airbnb-weekend-packing-list.json (consolidated by item name)
-let PACKING_LIST = [
-  // Clothing
-  {id:"c01",name:"Jacket",cat:"Clothing",sub:"Outerwear",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
-  {id:"c02",name:"Rain jacket / Waterproof Layer",cat:"Clothing",sub:"Outerwear",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
-  {id:"c03",name:"Long-sleeve shirt",cat:"Clothing",sub:"Tops",q:{steph:3,jen:3,rio:3,dahlia:0,maeve:0,shared:0}},
-  {id:"c04",name:"Sweater / hoodie",cat:"Clothing",sub:"Tops",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
-  {id:"c05",name:"Long pants",cat:"Clothing",sub:"Bottoms",q:{steph:3,jen:3,rio:3,dahlia:0,maeve:0,shared:0}},
-  {id:"c06",name:"Waterproof pants",cat:"Clothing",sub:"Bottoms",q:{steph:0,jen:0,rio:1,dahlia:1,maeve:1,shared:0}},
-  {id:"c07",name:"Bra",cat:"Clothing",sub:"Underwear",q:{steph:3,jen:3,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"c08",name:"Underwear/garments",cat:"Clothing",sub:"Underwear",q:{steph:4,jen:4,rio:4,dahlia:4,maeve:4,shared:0}},
-  {id:"c09",name:"Shoes",cat:"Clothing",sub:"Footwear",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
-  {id:"c10",name:"Slippers",cat:"Clothing",sub:"Footwear",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"c11",name:"Socks",cat:"Clothing",sub:"Footwear",q:{steph:4,jen:4,rio:4,dahlia:4,maeve:4,shared:0}},
-  {id:"c12",name:"Pajamas",cat:"Clothing",sub:"Sleepwear",q:{steph:1,jen:1,rio:1,dahlia:2,maeve:2,shared:0}},
-  {id:"c13",name:"Swimsuit",cat:"Clothing",sub:"Swimwear",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"c14",name:"Scarf/neck covering",cat:"Clothing",sub:"Accessories",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
-  {id:"c15",name:"Winter hat",cat:"Clothing",sub:"Accessories",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
-
-  // Toiletries
-  {id:"t01",name:"Toothbrush",cat:"Toiletries",sub:"Oral Care",q:{steph:1,jen:1,rio:1,dahlia:1,maeve:1,shared:0}},
-  {id:"t02",name:"Toothpaste",cat:"Toiletries",sub:"Oral Care",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"t03",name:"Baby Shampoo/Soap",cat:"Toiletries",sub:"Hair Care",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"t04",name:"Brush/comb",cat:"Toiletries",sub:"Hair Care",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"t05",name:"Conditioner",cat:"Toiletries",sub:"Hair Care",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"t06",name:"Hair ties",cat:"Toiletries",sub:"Hair Care",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"t07",name:"Shampoo",cat:"Toiletries",sub:"Hair Care",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"t08",name:"Deodorant",cat:"Toiletries",sub:"Hygiene",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"t09",name:"Laundry bag",cat:"Toiletries",sub:"Hygiene",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"t10",name:"Soap",cat:"Toiletries",sub:"Hygiene",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"t11",name:"Wet wipes",cat:"Toiletries",sub:"Hygiene",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"t12",name:"Changing pad",cat:"Toiletries",sub:"Diapering",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"t13",name:"Daytime diapers",cat:"Toiletries",sub:"Diapering",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:20}},
-  {id:"t14",name:"Diaper cream",cat:"Toiletries",sub:"Diapering",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"t15",name:"Nighttime diapers",cat:"Toiletries",sub:"Diapering",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:12}},
-
-  // Child Gear
-  {id:"g01",name:"Baby monitor",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g02",name:"Baby monitor stand",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g03",name:"Crib blanket",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:2,maeve:2,shared:0}},
-  {id:"g04",name:"Crib sheet (fitted)",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:2,maeve:2,shared:0}},
-  {id:"g05",name:"Night light",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g06",name:"Stuffies",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:3,dahlia:3,maeve:3,shared:0}},
-  {id:"g07",name:"Travel bed / Port-a-crib",cat:"Child Gear",sub:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:2,maeve:2,shared:0}},
-  {id:"g08",name:"Bibs",cat:"Child Gear",sub:"Feeding",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:4}},
-  {id:"g09",name:"Kids water bottle / Sippy cup",cat:"Child Gear",sub:"Feeding",q:{steph:0,jen:0,rio:3,dahlia:3,maeve:3,shared:0}},
-  {id:"g10",name:"Splat mat",cat:"Child Gear",sub:"Feeding",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g11",name:"Baby gate",cat:"Child Gear",sub:"Safety",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g12",name:"Outlet covers",cat:"Child Gear",sub:"Safety",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g13",name:"Step stool",cat:"Child Gear",sub:"Gear",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g14",name:"Travel car seat",cat:"Child Gear",sub:"Gear",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:3}},
-  {id:"g15",name:"Travel potty seat",cat:"Child Gear",sub:"Gear",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g16",name:"Coloring books / art supplies",cat:"Child Gear",sub:"Entertainment",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g17",name:"Kids Books",cat:"Child Gear",sub:"Entertainment",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g18",name:"Toys",cat:"Child Gear",sub:"Entertainment",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"g19",name:"Baby outfit (top + bottom)",cat:"Child Gear",sub:"Clothing",q:{steph:0,jen:0,rio:0,dahlia:4,maeve:4,shared:0}},
-
-  // Electronics
-  {id:"e01",name:"Mobile phone",cat:"Electronics",sub:"Devices",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"e02",name:"Mobile phone charger",cat:"Electronics",sub:"Devices",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"e03",name:"Tablet + charger",cat:"Electronics",sub:"Devices",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"e04",name:"Yoto / Kid device",cat:"Electronics",sub:"Devices",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"e05",name:"Bluetooth speaker",cat:"Electronics",sub:"Accessories",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"e06",name:"Car USB charger",cat:"Electronics",sub:"Accessories",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"e07",name:"Chromecast",cat:"Electronics",sub:"Accessories",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"e08",name:"Headphones",cat:"Electronics",sub:"Accessories",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"e09",name:"Kid headphones",cat:"Electronics",sub:"Accessories",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-
-  // Documents
-  {id:"d01",name:"ATM Card / Credit Cards",cat:"Documents",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"d02",name:"Driver's license / IDs",cat:"Documents",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"d03",name:"Wallet",cat:"Documents",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-
-  // Medical
-  {id:"m01",name:"Allergy meds",cat:"Medical",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"m02",name:"First Aid Kit",cat:"Medical",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"m03",name:"Ibuprofen",cat:"Medical",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"m04",name:"Stomach upset meds",cat:"Medical",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"m05",name:"Tylenol",cat:"Medical",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-
-  // Food & Drink
-  {id:"f01",name:"Ice packs for cooler",cat:"Food & Drink",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"f02",name:"Insulated coffee/tea mug",cat:"Food & Drink",q:{steph:1,jen:1,rio:0,dahlia:0,maeve:0,shared:0}},
-  {id:"f03",name:"Travel cooler",cat:"Food & Drink",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"f04",name:"Water bottle",cat:"Food & Drink",q:{steph:1,jen:1,rio:1,dahlia:0,maeve:0,shared:0}},
-
-  // Sleep
-  {id:"s01",name:"White noise machine",cat:"Sleep",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-
-  // Bags
-  {id:"b01",name:"Diaper bag",cat:"Bags",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"b02",name:"Toiletry bag",cat:"Bags",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-
-  // Misc
-  {id:"x01",name:"Boardgames",cat:"Misc",sub:"Entertainment",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"x02",name:"Small trash bags",cat:"Misc",sub:"Utility",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-  {id:"x03",name:"Trash bags",cat:"Misc",sub:"Utility",q:{steph:0,jen:0,rio:0,dahlia:0,maeve:0,shared:1}},
-];
+// Empty — add items from the catalog using the + button on each category
+let PACKING_LIST = [];
 // ===== PACKING LIST DATA — END =====
 
 // ===== MASTER CATALOG (from data/packing-items.json) =====
@@ -967,7 +911,9 @@ firebase.initializeApp({
   appId: "1:17448904137:web:e8ce3b5e6e9768977c7418"
 });
 const db = firebase.database();
-const stateRef = db.ref('trips/6c1cb3f94d17bd92feabeefe27c1f7b2');
+const tripIndexRef = db.ref('tripIndex');
+let stateRef = null;       // points to trips/{id}, set by switchTrip()
+let currentTripId = null;  // active trip ID
 let _fbReady = false;   // true once first snapshot arrives
 let _fbWriting = false;  // guard to ignore our own writes
 
@@ -992,10 +938,11 @@ function flashSyncFlame() {
 function saveState() {
   // Save local-only state to localStorage
   const local = { filters: [...state.activeFilters], collapsed: [...state.collapsed],
-    mode: state.mode, hidePacked: state.hidePacked };
+    mode: state.mode, hidePacked: state.hidePacked, currentTripId };
   try { localStorage.setItem(LS_KEY, JSON.stringify(local)); } catch(e) {}
   // Save shared state to Firebase
-  const shared = { list: PACKING_LIST, packed: [...state.packed], travelers: TRIP.travelers };
+  if (!stateRef) return;
+  const shared = { list: PACKING_LIST, packed: [...state.packed], travelers: TRIP.travelers, name: TRIP.name };
   _fbWriting = true;
   stateRef.set(shared).then(() => { _fbWriting = false; flashSyncFlame(); }).catch(() => { _fbWriting = false; });
 }
@@ -1010,10 +957,12 @@ function loadLocalState() {
     if (data.collapsed) state.collapsed = new Set(data.collapsed);
     if (data.mode) state.mode = data.mode;
     if (data.hidePacked) state.hidePacked = data.hidePacked;
+    if (data.currentTripId) currentTripId = data.currentTripId;
   } catch(e) {}
 }
 
 function applySharedData(data) {
+  if (data.name) TRIP.name = data.name;
   if (data.list) {
     PACKING_LIST = data.list;
     for (const item of PACKING_LIST) {
@@ -1125,9 +1074,9 @@ function render() {
   const app = document.getElementById('app');
   let h = '';
 
-  // Header
-  h += `<div class="header">
-    <div class="header-title">\u2744\ufe0f ${TRIP.name}</div>
+  // Header — tap to open trip management
+  h += `<div class="header" data-manage-trip>
+    <div class="header-title">${TRIP.name} <span class="trip-chevron">\u25be</span></div>
   </div>`;
   h += `<div class="mode-bar">
     <div class="mode-bar-left">
@@ -1345,7 +1294,7 @@ function toggleAddDrawer(catId) {
   link.textContent = '\u2212 Close';
   renderDrawerList(catId, '');
   const search = drawer.querySelector('.add-drawer-search');
-  if (search) { search.value = ''; search.focus(); }
+  if (search) { search.value = ''; }
 }
 
 function renderDrawerList(catId, query) {
@@ -1573,6 +1522,9 @@ function handleClick(e) {
   // Hide-packed toggle
   const hidePacked = t.closest('[data-hide-packed]');
   if (hidePacked) { toggleHidePacked(); return; }
+  // Trip management — tap header
+  const tripBtn = t.closest('[data-manage-trip]');
+  if (tripBtn) { openTripModal(); return; }
   // Manage travelers button
   const manageBtn = t.closest('[data-manage-travelers]');
   if (manageBtn) { openTravelerModal(); return; }
@@ -2339,33 +2291,319 @@ function removeTraveler(id) {
   setupDragHandlers();
 }
 
-// ===== INIT =====
-loadLocalState();
+// ===== TRIP MANAGEMENT =====
+let _tripEditId = null;      // null=list, 'new'=creating, tripId=renaming
+let _tripDeleteConfirm = null;
+let _tripList = {};           // cached trip index {id: {name, createdAt}}
 
-// Firebase real-time listener — re-renders when any device changes shared state
-stateRef.on('value', (snapshot) => {
-  if (_fbWriting) return; // ignore echoes of our own writes
+// Firebase listener handler — extracted so we can re-attach on trip switch
+function _onTripSnapshot(snapshot) {
+  if (_fbWriting) return;
   const data = snapshot.val();
   if (data) {
     applySharedData(data);
     if (!_fbReady) _fbReady = true;
   } else if (!_fbReady) {
-    // Firebase is empty — migrate from localStorage if available
-    migrateFromLocalStorage();
     _fbReady = true;
   }
+  updateGridCols();
   render();
   setupDragHandlers();
-});
+}
 
-// Render immediately with local data while waiting for Firebase
-render();
+function switchTrip(tripId) {
+  // Detach old listener
+  if (stateRef) stateRef.off('value', _onTripSnapshot);
+  // Reset state
+  _fbReady = false;
+  PACKING_LIST = [];
+  state.packed = new Set();
+  state.activeFilters = new Set();
+  TRIP.travelers = [];
+  TRIP.name = '';
+  // Point to new trip
+  currentTripId = tripId;
+  stateRef = db.ref('trips/' + tripId);
+  // Save trip selection to localStorage
+  const local = { filters: [], collapsed: [...state.collapsed],
+    mode: state.mode, hidePacked: state.hidePacked, currentTripId };
+  try { localStorage.setItem(LS_KEY, JSON.stringify(local)); } catch(e) {}
+  // Attach listener
+  stateRef.on('value', _onTripSnapshot);
+  updateGridCols();
+  render();
+  setupDragHandlers();
+}
+
+function createTrip(name) {
+  const id = 'trip-' + Date.now();
+  const defaultTravelers = [{ id:'steph', name:'Steph', initial:'S', color:'#6366f1' }];
+  // Write trip index entry
+  tripIndexRef.child(id).set({ name, createdAt: Date.now() });
+  // Write initial trip data
+  db.ref('trips/' + id).set({ list: [], packed: [], travelers: defaultTravelers, name });
+  // Switch to it
+  switchTrip(id);
+}
+
+function renameTrip(tripId, newName) {
+  // Update trip index
+  tripIndexRef.child(tripId).update({ name: newName });
+  // Update trip data
+  db.ref('trips/' + tripId).update({ name: newName });
+  // If current trip, update in memory
+  if (tripId === currentTripId) {
+    TRIP.name = newName;
+    render();
+    setupDragHandlers();
+  }
+}
+
+function deleteTrip(tripId) {
+  // Remove from index and data
+  tripIndexRef.child(tripId).remove();
+  db.ref('trips/' + tripId).remove();
+  // Remove from cached list
+  delete _tripList[tripId];
+  // If we deleted the current trip, switch to another
+  if (tripId === currentTripId) {
+    const remaining = Object.keys(_tripList);
+    if (remaining.length > 0) {
+      switchTrip(remaining[0]);
+    } else {
+      // No trips left — create a fresh one
+      createTrip('New Trip');
+    }
+  }
+}
+
+function openTripModal() {
+  closeTripModal();
+  _tripEditId = null;
+  _tripDeleteConfirm = null;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'trip-modal-overlay';
+  overlay.addEventListener('click', closeTripModal);
+
+  const modal = document.createElement('div');
+  modal.className = 'trip-modal';
+  modal.addEventListener('click', (e) => e.stopPropagation());
+
+  // Show loading state
+  modal.innerHTML = `<div class="trip-modal-header">
+    <div class="trip-modal-title">Trips</div>
+    <button class="add-modal-close" data-trip-close>\u2715</button>
+  </div><div style="padding:12px 0;font-size:13px;color:var(--medium-brown);">Loading\u2026</div>`;
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(modal);
+  modal.querySelector('[data-trip-close]').addEventListener('click', closeTripModal);
+
+  // Fetch trip list from Firebase
+  tripIndexRef.once('value', (snap) => {
+    _tripList = snap.val() || {};
+    renderTripModalContent(modal);
+  });
+}
+
+function closeTripModal() {
+  const overlay = document.querySelector('.trip-modal-overlay');
+  const modal = document.querySelector('.trip-modal');
+  if (overlay) overlay.remove();
+  if (modal) modal.remove();
+  _tripEditId = null;
+  _tripDeleteConfirm = null;
+}
+
+function renderTripModalContent(modal) {
+  if (!modal) modal = document.querySelector('.trip-modal');
+  if (!modal) return;
+
+  let h = `<div class="trip-modal-header">
+    <div class="trip-modal-title">Trips</div>
+    <button class="add-modal-close" data-trip-close>\u2715</button>
+  </div>`;
+
+  // Trip list sorted by most recently created
+  const entries = Object.entries(_tripList).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+  h += `<div class="trip-list">`;
+  for (const [id, info] of entries) {
+    const isCurrent = id === currentTripId;
+    if (_tripEditId === id) {
+      // Inline rename form
+      h += `<div class="trip-form" data-trip-rename-form>
+        <input class="add-modal-input" data-trip-rename-input value="${info.name}" placeholder="Trip name" autocomplete="off">
+        <div class="trip-form-actions">
+          <button class="trav-form-btn cancel" data-trip-rename-cancel>Cancel</button>
+          <button class="trav-form-btn save" data-trip-rename-save="${id}">Save</button>
+        </div>
+      </div>`;
+    } else if (_tripDeleteConfirm === id) {
+      // Delete confirmation
+      h += `<div class="trip-row ${isCurrent ? 'current' : ''}">
+        <div class="trip-row-name">${info.name}</div>
+        ${isCurrent ? '<span class="trip-row-badge">current</span>' : ''}
+      </div>`;
+      h += `<div class="trip-confirm">
+        <div class="trip-confirm-text">Delete <strong>${info.name}</strong>? All items and packed state will be lost.</div>
+        <div class="trip-confirm-actions">
+          <button class="trav-form-btn cancel" data-trip-delete-cancel>Cancel</button>
+          <button class="trav-form-btn danger" data-trip-delete-confirm="${id}">Delete</button>
+        </div>
+      </div>`;
+    } else {
+      h += `<div class="trip-row ${isCurrent ? 'current' : ''}" data-trip-switch="${id}">
+        <div class="trip-row-name">${info.name}</div>
+        ${isCurrent ? '<span class="trip-row-badge">current</span>' : ''}
+        <button class="trip-action" data-trip-edit="${id}" title="Rename">\u270e</button>
+        <button class="trip-action delete" data-trip-delete="${id}" title="Delete">\u2715</button>
+      </div>`;
+    }
+  }
+  h += `</div>`;
+
+  // New trip form or button
+  if (_tripEditId === 'new') {
+    h += `<div class="trip-form" data-trip-new-form>
+      <input class="add-modal-input" data-trip-new-input placeholder="Trip name" autocomplete="off">
+      <div class="trip-form-actions">
+        <button class="trav-form-btn cancel" data-trip-new-cancel>Cancel</button>
+        <button class="trav-form-btn save" data-trip-new-save disabled>Create</button>
+      </div>
+    </div>`;
+  } else {
+    h += `<button class="trav-add-btn" data-trip-add>+ New Trip</button>`;
+  }
+
+  modal.innerHTML = h;
+
+  // Wire up events
+  modal.querySelector('[data-trip-close]')?.addEventListener('click', closeTripModal);
+
+  // Switch trip — tap the row
+  modal.querySelectorAll('[data-trip-switch]').forEach(row => {
+    row.addEventListener('click', (e) => {
+      // Don't switch if they tapped an action button
+      if (e.target.closest('.trip-action')) return;
+      const id = row.dataset.tripSwitch;
+      if (id !== currentTripId) {
+        switchTrip(id);
+        closeTripModal();
+      }
+    });
+  });
+
+  // Edit (rename) buttons
+  modal.querySelectorAll('[data-trip-edit]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _tripEditId = btn.dataset.tripEdit;
+      _tripDeleteConfirm = null;
+      renderTripModalContent(modal);
+    });
+  });
+
+  // Delete buttons
+  modal.querySelectorAll('[data-trip-delete]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _tripDeleteConfirm = btn.dataset.tripDelete;
+      _tripEditId = null;
+      renderTripModalContent(modal);
+    });
+  });
+
+  // Delete confirmation
+  modal.querySelectorAll('[data-trip-delete-confirm]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      deleteTrip(btn.dataset.tripDeleteConfirm);
+      _tripDeleteConfirm = null;
+      renderTripModalContent(modal);
+    });
+  });
+  modal.querySelectorAll('[data-trip-delete-cancel]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _tripDeleteConfirm = null;
+      renderTripModalContent(modal);
+    });
+  });
+
+  // Rename form
+  const renameInput = modal.querySelector('[data-trip-rename-input]');
+  const renameSave = modal.querySelector('[data-trip-rename-save]');
+  if (renameInput && renameSave) {
+    renameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') renameSave.click(); });
+    renameSave.addEventListener('click', () => {
+      const newName = renameInput.value.trim();
+      if (!newName) return;
+      const id = renameSave.dataset.tripRenameSave;
+      renameTrip(id, newName);
+      _tripList[id].name = newName;
+      _tripEditId = null;
+      renderTripModalContent(modal);
+    });
+  }
+  modal.querySelector('[data-trip-rename-cancel]')?.addEventListener('click', () => {
+    _tripEditId = null;
+    renderTripModalContent(modal);
+  });
+
+  // New trip form
+  modal.querySelector('[data-trip-add]')?.addEventListener('click', () => {
+    _tripEditId = 'new';
+    renderTripModalContent(modal);
+  });
+  const newInput = modal.querySelector('[data-trip-new-input]');
+  const newSave = modal.querySelector('[data-trip-new-save]');
+  if (newInput && newSave) {
+    newInput.addEventListener('input', () => { newSave.disabled = !newInput.value.trim(); });
+    newInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !newSave.disabled) newSave.click(); });
+    newSave.addEventListener('click', () => {
+      const name = newInput.value.trim();
+      if (!name) return;
+      createTrip(name);
+      closeTripModal();
+    });
+  }
+  modal.querySelector('[data-trip-new-cancel]')?.addEventListener('click', () => {
+    _tripEditId = null;
+    renderTripModalContent(modal);
+  });
+}
+
+// ===== INIT =====
+loadLocalState();
+
+// Register event handlers once
 document.getElementById('app').addEventListener('click', handleClick);
 document.getElementById('app').addEventListener('input', (e) => {
   const search = e.target.closest('.add-drawer-search');
   if (search) renderDrawerList(search.dataset.searchCat, search.value);
 });
-setupDragHandlers();
+
+// Render immediately with whatever local data we have
+render();
+
+if (currentTripId) {
+  // Resume last trip
+  switchTrip(currentTripId);
+} else {
+  // First load — check if any trips exist in Firebase
+  tripIndexRef.once('value', (snap) => {
+    const trips = snap.val();
+    if (trips) {
+      // Pick the most recently created trip
+      const sorted = Object.entries(trips).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+      switchTrip(sorted[0][0]);
+    } else {
+      // No trips in Firebase — register the current hardcoded trip
+      const migrationId = 'a3d7e9f1b2c4086d5e3f7a9b1c2d4e6f';
+      tripIndexRef.child(migrationId).set({ name: TRIP.name, createdAt: Date.now() });
+      switchTrip(migrationId);
+    }
+  });
+}
 </script>
 </body>
 </html>
