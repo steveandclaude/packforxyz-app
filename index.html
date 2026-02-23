@@ -449,6 +449,7 @@
     .item-row.all-packed{opacity:0.55;}
     .item-row.all-packed:hover{opacity:0.65;}
     .item-row.hide-packed-row{display:none;}
+    .subcat-divider.hide-packed-sub{display:none;}
 
     /* Qty badge on checked pack circles (qty > 1) */
     .qty-badge{
@@ -1253,7 +1254,7 @@ function render() {
       // Insert subcategory divider when subcategory changes (only for categories with sort config)
       if (SUBCATEGORY_ORDER[cat.id] && item.sub && item.sub !== prevSub) {
         const icon = (SUBCATEGORY_ICONS_BY_CAT[cat.id] && SUBCATEGORY_ICONS_BY_CAT[cat.id][item.sub]) || SUBCATEGORY_ICONS[item.sub] || '';
-        h += `<div class="subcat-divider"><span class="subcat-icon">${icon}</span><span class="subcat-label">${item.sub}</span><span class="subcat-line"></span></div>`;
+        h += `<div class="subcat-divider" data-subcat="${cat.id}::${item.sub}"><span class="subcat-icon">${icon}</span><span class="subcat-label">${item.sub}</span><span class="subcat-line"></span></div>`;
         prevSub = item.sub;
       }
       // In pack mode: hide rows where none of the filtered travelers have qty > 0
@@ -1262,7 +1263,9 @@ function render() {
       // Packed state: in pack mode, "all packed" means all *filtered* travelers are packed
       const allPacked = state.mode === 'pack' && TRIP.travelers.every(t => !isFiltered(t.id) || (item.q[t.id] || 0) === 0 || state.packed.has(packKey(item.id, t.id)));
       const hideRow = state.mode === 'pack' && state.hidePacked && allPacked;
-      h += `<div class="item-row grid-row ${allPacked?'all-packed':''} ${hideRow?'hide-packed-row':''}" data-row="${item.id}">`;
+      const subcatKey = item.sub ? `${cat.id}::${item.sub}` : '';
+      h += `<div class="item-row grid-row ${allPacked?'all-packed':''} ${hideRow?'hide-packed-row':''}" data-row="${item.id}" ${subcatKey ? `data-subcat-item="${subcatKey}"` : ''}>`;
+
       h += `<div class="item-name" title="${item.name}">${item.name}</div>`;
       for (const t of TRIP.travelers) {
         const v = item.q[t.id] || 0;
@@ -1575,6 +1578,7 @@ function togglePacked(itemId, tid) {
     row.classList.toggle('all-packed', ap);
     row.classList.toggle('hide-packed-row', state.hidePacked && ap);
   }
+  updateSubcatVisibility();
   updatePackProgress();
   saveState();
 }
@@ -1597,7 +1601,24 @@ function toggleHidePacked() {
       row.classList.toggle('hide-packed-row', state.hidePacked && ap);
     }
   });
+  updateSubcatVisibility();
   saveState();
+}
+
+function updateSubcatVisibility() {
+  // Hide subcategory dividers where all items are hidden
+  document.querySelectorAll('.subcat-divider[data-subcat]').forEach(div => {
+    const key = div.dataset.subcat;
+    const rows = document.querySelectorAll(`[data-subcat-item="${key}"]`);
+    const allHidden = rows.length > 0 && [...rows].every(r => r.classList.contains('hide-packed-row'));
+    div.classList.toggle('hide-packed-sub', allHidden);
+  });
+  // Hide entire category when all its item rows are hidden
+  document.querySelectorAll('.category[data-category]').forEach(cat => {
+    const rows = cat.querySelectorAll('.item-row');
+    const allHidden = rows.length > 0 && [...rows].every(r => r.classList.contains('hide-packed-row'));
+    cat.classList.toggle('hide-packed-sub', allHidden);
+  });
 }
 
 function updatePackProgress() {
