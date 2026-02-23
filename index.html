@@ -1026,6 +1026,11 @@ function emptyQ() {
   for (const t of TRIP.travelers) q[t.id] = 0;
   return q;
 }
+function defaultQ() {
+  const q = {};
+  for (const t of TRIP.travelers) q[t.id] = 1;
+  return q;
+}
 function updateGridCols() {
   document.documentElement.style.setProperty('--grid-cols',
     `1fr repeat(${TRIP.travelers.length}, var(--cell-size)) var(--delete-size)`);
@@ -1341,7 +1346,7 @@ function addCatalogItem(catalogId) {
     id: catalogId,
     name: catItem.name,
     cat: catItem.cat,
-    q: emptyQ()
+    q: defaultQ()
   };
   if (catItem.sub) newItem.sub = catItem.sub;
   PACKING_LIST.push(newItem);
@@ -1911,7 +1916,7 @@ function addCatalogItemFromSearch(catalogId) {
     id: catalogId,
     name: catItem.name,
     cat: catItem.cat,
-    q: emptyQ()
+    q: defaultQ()
   };
   if (catItem.sub) newItem.sub = catItem.sub;
   PACKING_LIST.push(newItem);
@@ -1933,7 +1938,7 @@ function submitNewItemFromSearch() {
     id: 'custom-' + Date.now(),
     name: name,
     cat: _addModalCat,
-    q: emptyQ()
+    q: defaultQ()
   };
   if (_addModalSub) newItem.sub = _addModalSub;
   PACKING_LIST.push(newItem);
