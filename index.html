@@ -539,6 +539,95 @@
     .trav-form-btn.danger{background:var(--vintage-red);color:#fff;}
     .trav-form-btn.danger:hover{background:#a83020;}
 
+    /* ===== MANAGE MENU ===== */
+    .manage-menu{
+      position:absolute;top:100%;right:0;margin-top:4px;z-index:50;
+      background:var(--warm-white);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.18);
+      border:1.5px solid rgba(44,24,16,0.1);overflow:hidden;min-width:160px;
+    }
+    .manage-menu-item{
+      display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;
+      font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--dark-brown);
+      transition:background 0.12s;border:none;background:none;width:100%;text-align:left;
+    }
+    .manage-menu-item:hover{background:rgba(44,24,16,0.06);}
+    .manage-menu-item+.manage-menu-item{border-top:1px solid rgba(44,24,16,0.06);}
+    .manage-menu-icon{font-size:16px;width:22px;text-align:center;}
+
+    /* ===== CATALOG MANAGEMENT MODAL ===== */
+    .catalog-modal-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0.35);}
+    .catalog-modal{
+      position:fixed;top:4vh;left:8px;right:8px;bottom:4vh;z-index:95;
+      background:var(--warm-white);border-radius:16px;
+      display:flex;flex-direction:column;
+      box-shadow:0 4px 24px rgba(0,0,0,0.2);
+    }
+    @media(min-width:480px){.catalog-modal{left:auto;right:16px;width:400px;}}
+    .catalog-modal-header{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:16px 20px 12px;border-bottom:1px solid rgba(44,24,16,0.08);flex-shrink:0;
+    }
+    .catalog-modal-title{font-family:'Arvo',serif;font-size:16px;font-weight:700;color:var(--dark-brown);}
+    .catalog-modal-body{flex:1;overflow-y:auto;padding:12px 16px 20px;}
+    .catalog-cat-header{
+      display:flex;align-items:center;gap:8px;padding:10px 0 6px;cursor:pointer;
+      font-family:'Arvo',serif;font-size:14px;font-weight:700;color:var(--dark-brown);
+    }
+    .catalog-cat-header .cat-emoji{font-size:16px;}
+    .catalog-cat-count{font-size:11px;color:var(--light-brown);font-weight:600;margin-left:auto;}
+    .catalog-sub-header{
+      font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;text-transform:uppercase;
+      letter-spacing:1px;color:var(--light-brown);padding:8px 0 4px 4px;
+      border-bottom:1px dashed rgba(44,24,16,0.1);
+    }
+    .catalog-item-row{
+      display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:8px;
+      transition:background 0.12s;
+    }
+    .catalog-item-row:hover{background:rgba(44,24,16,0.04);}
+    .catalog-star{
+      width:28px;height:28px;border:none;background:none;cursor:pointer;
+      font-size:18px;color:rgba(44,24,16,0.2);transition:all 0.15s;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .catalog-star.active{color:var(--gold);}
+    .catalog-star:hover{transform:scale(1.2);}
+    .catalog-item-name{flex:1;font-family:'Nunito',sans-serif;font-size:13px;color:var(--dark-brown);}
+    .catalog-item-name.custom{font-style:italic;}
+    .catalog-item-qty{
+      width:32px;height:28px;border-radius:8px;border:1.5px solid rgba(44,24,16,0.15);
+      background:var(--cream);font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;
+      text-align:center;color:var(--dark-brown);cursor:pointer;transition:all 0.15s;
+    }
+    .catalog-item-qty:hover{border-color:var(--gold);}
+    .catalog-item-qty.inactive{opacity:0.3;cursor:default;}
+    .catalog-item-delete{
+      width:24px;height:24px;border:none;background:none;cursor:pointer;
+      font-size:12px;color:rgba(44,24,16,0.2);transition:all 0.15s;
+      display:flex;align-items:center;justify-content:center;border-radius:50%;
+    }
+    .catalog-item-delete:hover{background:rgba(194,59,34,0.12);color:var(--vintage-red);}
+    .catalog-add-custom{
+      display:flex;align-items:center;gap:6px;margin-top:6px;padding:6px 10px;
+      border:1.5px dashed rgba(45,95,45,0.3);border-radius:8px;
+      background:rgba(45,95,45,0.04);color:var(--forest-green);cursor:pointer;
+      font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;transition:all 0.15s;
+    }
+    .catalog-add-custom:hover{background:rgba(45,95,45,0.1);border-color:var(--forest-green);}
+    .catalog-add-form{
+      display:flex;gap:6px;margin-top:6px;align-items:center;
+    }
+    .catalog-add-form input{
+      flex:1;padding:6px 10px;border-radius:8px;border:1.5px solid rgba(44,24,16,0.15);
+      font-family:'Nunito',sans-serif;font-size:13px;background:var(--cream);
+    }
+    .catalog-search{
+      width:100%;padding:8px 12px;border-radius:10px;border:1.5px solid rgba(44,24,16,0.12);
+      font-family:'Nunito',sans-serif;font-size:13px;background:var(--cream);
+      margin-bottom:8px;
+    }
+    .catalog-search:focus{outline:none;border-color:var(--gold);}
+
     /* ===== TRIP MANAGEMENT MODAL ===== */
     /* Sign-in screen */
     .sign-in-screen{position:fixed;inset:0;z-index:200;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;}
@@ -928,10 +1017,15 @@ firebase.initializeApp({
 const db = firebase.database();
 const auth = firebase.auth();
 const tripIndexRef = db.ref('tripIndex');
+const catalogRef = db.ref('catalog');   // always-pack prefs + custom catalog items
 let stateRef = null;       // points to trips/{id}, set by switchTrip()
 let currentTripId = null;  // active trip ID
 let _fbReady = false;   // true once first snapshot arrives
 let _fbWriting = false;  // guard to ignore our own writes
+
+// Catalog customization state (loaded from Firebase, trip-independent)
+let _alwaysPack = {};      // { itemId: { qty: { steph: 3 } } }
+let _customCatalogItems = {};  // { itemId: { name, cat, sub? } }
 
 // Shared state (synced across devices): packing list + packed items
 // Local state (per-device): filters, collapsed, mode, hidePacked
@@ -1108,8 +1202,8 @@ function render() {
       <div class="mode-switch ${state.mode==='pack'?'pack':''}" data-mode-toggle></div>
       <span class="mode-toggle-label pack-label ${state.mode==='pack'?'active':'inactive'}">Packing</span>
     </div>
-    <div class="mode-bar-right">
-      <button class="manage-btn" data-manage-travelers>\ud83d\udc65 Manage</button>
+    <div class="mode-bar-right" style="position:relative;">
+      <button class="manage-btn" data-manage-menu>\u2699\uFE0F Manage</button>
     </div>
   </div>`;
 
@@ -1546,9 +1640,17 @@ function handleClick(e) {
   // Trip management — tap header
   const tripBtn = t.closest('[data-manage-trip]');
   if (tripBtn) { openTripModal(); return; }
-  // Manage travelers button
-  const manageBtn = t.closest('[data-manage-travelers]');
-  if (manageBtn) { openTravelerModal(); return; }
+  // Manage menu button
+  const manageBtn = t.closest('[data-manage-menu]');
+  if (manageBtn) { toggleManageMenu(); return; }
+  // Manage menu items
+  const manageItem = t.closest('[data-manage-option]');
+  if (manageItem) {
+    closeManageMenu();
+    if (manageItem.dataset.manageOption === 'travelers') openTravelerModal();
+    else if (manageItem.dataset.manageOption === 'catalog') openCatalogModal();
+    return;
+  }
   // Column header filter pills
   const filterPill = t.closest('[data-filter]');
   if (filterPill && (filterPill.classList.contains('col-all') || filterPill.classList.contains('col-hdr'))) {
@@ -2092,6 +2194,285 @@ function setupDragHandlers() {
   });
 }
 
+// ===== MANAGE MENU =====
+function toggleManageMenu() {
+  const existing = document.querySelector('.manage-menu');
+  if (existing) { closeManageMenu(); return; }
+  const btn = document.querySelector('[data-manage-menu]');
+  if (!btn) return;
+  const menu = document.createElement('div');
+  menu.className = 'manage-menu';
+  menu.innerHTML = `
+    <button class="manage-menu-item" data-manage-option="travelers">
+      <span class="manage-menu-icon">\ud83d\udc65</span> Travelers
+    </button>
+    <button class="manage-menu-item" data-manage-option="catalog">
+      <span class="manage-menu-icon">\u2b50</span> Items & Defaults
+    </button>
+  `;
+  btn.parentElement.appendChild(menu);
+  // Close on outside click (next tick to avoid closing immediately)
+  setTimeout(() => {
+    document.addEventListener('click', _closeManageMenuOutside, { once: true });
+  }, 0);
+}
+function _closeManageMenuOutside(e) {
+  const menu = document.querySelector('.manage-menu');
+  if (menu && !menu.contains(e.target)) closeManageMenu();
+}
+function closeManageMenu() {
+  const menu = document.querySelector('.manage-menu');
+  if (menu) menu.remove();
+  document.removeEventListener('click', _closeManageMenuOutside);
+}
+
+// ===== CATALOG MANAGEMENT MODAL =====
+let _catalogSearch = '';
+let _catalogAddingCat = null;  // category where user is adding a custom item
+let _catalogDeleteConfirm = null;  // custom item ID pending deletion
+
+function openCatalogModal() {
+  closeCatalogModal();
+  _catalogSearch = '';
+  _catalogAddingCat = null;
+  _catalogDeleteConfirm = null;
+
+  // Load always-pack data from Firebase
+  catalogRef.once('value', (snap) => {
+    const data = snap.val() || {};
+    _alwaysPack = data.alwaysPack || {};
+    _customCatalogItems = data.customItems || {};
+
+    // Merge custom items into CATALOG if not already present
+    _mergeCustomCatalogItems();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'catalog-modal-overlay';
+    overlay.addEventListener('click', closeCatalogModal);
+
+    const modal = document.createElement('div');
+    modal.className = 'catalog-modal';
+    modal.addEventListener('click', (e) => e.stopPropagation());
+
+    renderCatalogModalContent(modal);
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(modal);
+  });
+}
+
+function closeCatalogModal() {
+  const overlay = document.querySelector('.catalog-modal-overlay');
+  const modal = document.querySelector('.catalog-modal');
+  if (overlay) overlay.remove();
+  if (modal) modal.remove();
+  _catalogAddingCat = null;
+  _catalogDeleteConfirm = null;
+}
+
+function _mergeCustomCatalogItems() {
+  for (const [id, item] of Object.entries(_customCatalogItems)) {
+    if (!CATALOG.some(c => c.id === id)) {
+      const entry = { id, name: item.name, cat: item.cat };
+      if (item.sub) entry.sub = item.sub;
+      CATALOG.push(entry);
+    }
+  }
+}
+
+function renderCatalogModalContent(modal) {
+  if (!modal) modal = document.querySelector('.catalog-modal');
+  if (!modal) return;
+
+  const q = _catalogSearch.toLowerCase();
+
+  let h = `<div class="catalog-modal-header">
+    <div class="catalog-modal-title">\u2b50 Items & Defaults</div>
+    <button class="add-modal-close" data-catalog-close>\u2715</button>
+  </div>`;
+  h += `<div class="catalog-modal-body">`;
+  h += `<input class="catalog-search" type="text" placeholder="Search items\u2026" value="${_catalogSearch}" data-catalog-search>`;
+
+  for (const cat of CATS) {
+    const catItems = CATALOG.filter(c => c.cat === cat.id);
+    const filtered = q ? catItems.filter(c => c.name.toLowerCase().includes(q)) : catItems;
+    if (filtered.length === 0 && !q) { /* show category with add button */ }
+    if (filtered.length === 0 && q) continue;
+
+    const alwaysCount = filtered.filter(c => _alwaysPack[c.id]).length;
+    h += `<div class="catalog-cat-header">
+      <span class="cat-emoji">${cat.emoji}</span> ${cat.id}
+      <span class="catalog-cat-count">${alwaysCount ? alwaysCount + ' always-pack' : ''}</span>
+    </div>`;
+
+    // Group by subcategory
+    const subOrder = SUBCATEGORY_ORDER[cat.id] || [];
+    const bySub = {};
+    for (const item of filtered) {
+      const s = item.sub || '_none';
+      if (!bySub[s]) bySub[s] = [];
+      bySub[s].push(item);
+    }
+    const subKeys = [...new Set([...subOrder.filter(s => bySub[s]), ...Object.keys(bySub).filter(s => s !== '_none' && !subOrder.includes(s))])];
+    if (bySub['_none']) subKeys.push('_none');
+
+    for (const sub of subKeys) {
+      const items = bySub[sub];
+      if (!items) continue;
+      if (sub !== '_none') {
+        const subIcon = (SUBCATEGORY_ICONS_BY_CAT[cat.id] && SUBCATEGORY_ICONS_BY_CAT[cat.id][sub]) || SUBCATEGORY_ICONS[sub] || '';
+        h += `<div class="catalog-sub-header">${subIcon} ${sub}</div>`;
+      }
+      for (const item of items) {
+        const isAlways = !!_alwaysPack[item.id];
+        const isCustom = !!_customCatalogItems[item.id];
+        const apQty = isAlways && _alwaysPack[item.id].qty ? _alwaysPack[item.id].qty : null;
+        const displayQty = apQty ? Object.values(apQty)[0] || 1 : 1;
+
+        h += `<div class="catalog-item-row">
+          <button class="catalog-star ${isAlways ? 'active' : ''}" data-catalog-star="${item.id}" title="Always pack">${isAlways ? '\u2605' : '\u2606'}</button>
+          <span class="catalog-item-name ${isCustom ? 'custom' : ''}">${item.name}</span>
+          <input type="number" class="catalog-item-qty ${isAlways ? '' : 'inactive'}" value="${displayQty}" min="1" max="99"
+            data-catalog-qty="${item.id}" ${isAlways ? '' : 'disabled'} title="Default quantity">
+          ${isCustom ? `<button class="catalog-item-delete" data-catalog-delete="${item.id}" title="Remove from catalog">\u2715</button>` : ''}
+        </div>`;
+
+        if (_catalogDeleteConfirm === item.id) {
+          h += `<div class="trav-confirm" style="margin:4px 0 8px 36px;">
+            <div class="trav-confirm-text">Remove <strong>${item.name}</strong> from catalog?</div>
+            <div class="trav-confirm-actions">
+              <button class="trav-form-btn cancel" data-catalog-delete-cancel>Cancel</button>
+              <button class="trav-form-btn danger" data-catalog-delete-confirm="${item.id}">Delete</button>
+            </div>
+          </div>`;
+        }
+      }
+    }
+
+    // Add custom item button/form
+    if (_catalogAddingCat === cat.id) {
+      h += `<div class="catalog-add-form" data-catalog-add-form="${cat.id}">
+        <input type="text" placeholder="Item name\u2026" data-catalog-add-input autocomplete="off">
+        <button class="trav-form-btn cancel" data-catalog-add-cancel>Cancel</button>
+        <button class="trav-form-btn save" data-catalog-add-save="${cat.id}">Add</button>
+      </div>`;
+    } else {
+      h += `<div class="catalog-add-custom" data-catalog-add-btn="${cat.id}">+ Add custom item</div>`;
+    }
+  }
+
+  h += `</div>`;
+  modal.innerHTML = h;
+
+  // Wire up events
+  modal.querySelector('[data-catalog-close]')?.addEventListener('click', closeCatalogModal);
+
+  // Search
+  const searchInput = modal.querySelector('[data-catalog-search]');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      _catalogSearch = e.target.value;
+      renderCatalogModalContent(modal);
+      // Re-focus and restore cursor
+      const newInput = modal.querySelector('[data-catalog-search]');
+      if (newInput) { newInput.focus(); newInput.selectionStart = newInput.selectionEnd = newInput.value.length; }
+    });
+  }
+
+  // Star toggles
+  modal.querySelectorAll('[data-catalog-star]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.catalogStar;
+      if (_alwaysPack[id]) {
+        delete _alwaysPack[id];
+        catalogRef.child('alwaysPack/' + id).remove();
+      } else {
+        _alwaysPack[id] = { qty: { steph: 1 } };
+        catalogRef.child('alwaysPack/' + id).set(_alwaysPack[id]);
+      }
+      renderCatalogModalContent(modal);
+    });
+  });
+
+  // Quantity changes
+  modal.querySelectorAll('[data-catalog-qty]').forEach(input => {
+    input.addEventListener('change', () => {
+      const id = input.dataset.catalogQty;
+      const val = Math.max(1, Math.min(99, parseInt(input.value) || 1));
+      if (_alwaysPack[id]) {
+        // Update qty for all travelers in the always-pack entry
+        const qObj = {};
+        for (const t of TRIP.travelers) qObj[t.id] = val;
+        _alwaysPack[id].qty = qObj;
+        catalogRef.child('alwaysPack/' + id).set(_alwaysPack[id]);
+      }
+    });
+  });
+
+  // Add custom item buttons
+  modal.querySelectorAll('[data-catalog-add-btn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _catalogAddingCat = btn.dataset.catalogAddBtn;
+      renderCatalogModalContent(modal);
+      const newInput = modal.querySelector('[data-catalog-add-input]');
+      if (newInput) newInput.focus();
+    });
+  });
+
+  // Cancel add
+  modal.querySelector('[data-catalog-add-cancel]')?.addEventListener('click', () => {
+    _catalogAddingCat = null;
+    renderCatalogModalContent(modal);
+  });
+
+  // Save custom item
+  modal.querySelectorAll('[data-catalog-add-save]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const catId = btn.dataset.catalogAddSave;
+      const input = modal.querySelector('[data-catalog-add-input]');
+      const name = input?.value.trim();
+      if (!name) return;
+
+      const id = 'custom-' + Date.now();
+      const item = { name, cat: catId };
+      _customCatalogItems[id] = item;
+      catalogRef.child('customItems/' + id).set(item);
+      CATALOG.push({ id, name, cat: catId });
+      _catalogAddingCat = null;
+      renderCatalogModalContent(modal);
+    });
+  });
+
+  // Delete custom item
+  modal.querySelectorAll('[data-catalog-delete]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _catalogDeleteConfirm = btn.dataset.catalogDelete;
+      renderCatalogModalContent(modal);
+    });
+  });
+  modal.querySelector('[data-catalog-delete-cancel]')?.addEventListener('click', () => {
+    _catalogDeleteConfirm = null;
+    renderCatalogModalContent(modal);
+  });
+  modal.querySelectorAll('[data-catalog-delete-confirm]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.catalogDeleteConfirm;
+      delete _customCatalogItems[id];
+      delete _alwaysPack[id];
+      catalogRef.child('customItems/' + id).remove();
+      catalogRef.child('alwaysPack/' + id).remove();
+      // Remove from in-memory CATALOG
+      const idx = CATALOG.findIndex(c => c.id === id);
+      if (idx >= 0) CATALOG.splice(idx, 1);
+      _catalogDeleteConfirm = null;
+      renderCatalogModalContent(modal);
+    });
+  });
+
+  // Focus search on open
+  if (!_catalogSearch && searchInput) searchInput.focus();
+}
+
 // ===== TRAVELLER MANAGEMENT MODAL =====
 const TRAV_COLORS = ['#6366f1','#ec4899','#f59e0b','#10b981','#8b5cf6','#ef4444','#06b6d4','#f97316','#84cc16','#b8860b','#e879f9','#14b8a6'];
 let _travEditId = null; // null = closed, 'new' = adding, or traveler id = editing
@@ -2359,10 +2740,25 @@ function switchTrip(tripId) {
 function createTrip(name) {
   const id = 'trip-' + Date.now();
   const defaultTravelers = [{ id:'steph', name:'Steph', initial:'S', color:'#6366f1' }];
+
+  // Build initial packing list from always-pack items
+  const initialList = [];
+  for (const [itemId, apData] of Object.entries(_alwaysPack)) {
+    const catItem = CATALOG.find(c => c.id === itemId);
+    if (!catItem) continue;
+    const q = {};
+    for (const t of defaultTravelers) {
+      q[t.id] = (apData.qty && apData.qty[t.id]) ? apData.qty[t.id] : (apData.qty ? Object.values(apData.qty)[0] || 1 : 1);
+    }
+    const entry = { id: itemId, name: catItem.name, cat: catItem.cat, q };
+    if (catItem.sub) entry.sub = catItem.sub;
+    initialList.push(entry);
+  }
+
   // Write trip index entry
   tripIndexRef.child(id).set({ name, createdAt: Date.now() });
-  // Write initial trip data
-  db.ref('trips/' + id).set({ list: [], packed: [], travelers: defaultTravelers, name });
+  // Write initial trip data (with always-pack items pre-populated)
+  db.ref('trips/' + id).set({ list: initialList, packed: [], travelers: defaultTravelers, name });
   // Switch to it
   switchTrip(id);
 }
@@ -2649,6 +3045,14 @@ function initApp() {
   _appInitialized = true;
 
   loadLocalState();
+
+  // Load catalog customizations (always-pack + custom items) from Firebase
+  catalogRef.once('value', (snap) => {
+    const data = snap.val() || {};
+    _alwaysPack = data.alwaysPack || {};
+    _customCatalogItems = data.customItems || {};
+    _mergeCustomCatalogItems();
+  });
 
   // Register event handlers once
   document.getElementById('app').addEventListener('click', handleClick);
