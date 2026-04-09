@@ -358,23 +358,27 @@
     }
     .hide-packed-toggle:hover{background:rgba(45,95,45,0.06);}
     .hide-packed-toggle.active{background:var(--forest-green);color:#fff;}
-    .mode-toggle-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
-      transition:color 0.3s,opacity 0.3s;}
-    .mode-toggle-label.active{opacity:1;}
-    .mode-toggle-label.inactive{opacity:0.4;}
-    .mode-toggle-label.plan-label{color:var(--gold);}
-    .mode-toggle-label.pack-label{color:#4ADE80;}
-    .mode-switch{
-      width:48px;height:26px;border-radius:13px;border:2px solid rgba(44,24,16,0.2);
-      background:rgba(44,24,16,0.06);cursor:pointer;position:relative;transition:all 0.3s;
-      flex-shrink:0;
+    .mode-seg{display:flex;border-radius:14px;overflow:hidden;border:1.5px solid rgba(44,24,16,0.2);background:rgba(44,24,16,0.04);}
+    .mode-seg-btn{
+      padding:4px 12px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;
+      text-transform:uppercase;letter-spacing:0.5px;border:none;background:transparent;
+      cursor:pointer;transition:all 0.25s;color:var(--dark-brown);opacity:0.4;user-select:none;
     }
-    .mode-switch::after{
-      content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
-      background:var(--gold);transition:all 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.3);
+    .mode-seg-btn.active{opacity:1;border-radius:12px;}
+    .mode-seg-btn.plan-seg.active{background:var(--gold);color:#fff;}
+    .mode-seg-btn.pack-seg.active{background:#4ADE80;color:#fff;}
+    .mode-seg-btn.morn-seg.active{background:#F59E0B;color:#fff;}
+    .sun-btn{
+      display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;
+      border:1.5px solid #F59E0B;background:transparent;cursor:pointer;
+      font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#F59E0B;
+      transition:all 0.15s;user-select:none;
     }
-    .mode-switch.pack::after{left:24px;background:#4ADE80;}
-    .mode-switch.pack{border-color:rgba(74,222,128,0.5);background:rgba(74,222,128,0.15);}
+    .sun-btn:hover{background:rgba(245,158,11,0.06);}
+    .sun-btn.active{background:#F59E0B;color:#fff;}
+    .item-name.morning-tagged::after{content:'\2600';margin-left:4px;font-size:12px;opacity:0.7;}
+    .item-name.sun-clickable{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;
+      text-decoration-color:#F59E0B;text-underline-offset:2px;}
 
     /* ===== PROGRESS BAR ===== */
     .progress-section{
@@ -465,6 +469,10 @@
     body.pack-mode .del-btn{display:none;}
     .item-row.pack-edit-row .del-btn{display:flex!important;position:relative;z-index:96;opacity:1!important;}
     body.pack-mode .see-more,body.pack-mode .add-drawer{display:none;}
+    body.morning-mode .del-btn{display:none;}
+    body.morning-mode .see-more,body.morning-mode .add-drawer{display:none;}
+    body.morning-mode .progress-bar-fill{background:linear-gradient(90deg,#D97706,#F59E0B);}
+    body.morning-mode .progress-pct{color:#D97706;}
 
     /* Category pack progress in header */
     .cat-pack-progress{
@@ -694,8 +702,8 @@
 <script>
 // ===== TRIP DATA =====
 const TRIP = {
-  name: "Dallas Work Trip", dates: "Mon\u2013Fri", destination: "Dallas, TX",
-  duration: 5, nights: 4,
+  name: "New Trip", dates: "", destination: "",
+  duration: 0, nights: 0,
   travelers: [
     { id:"steph", name:"Steph", initial:"S", color:"#6366f1" }
   ]
@@ -997,7 +1005,8 @@ const CATALOG = [
 ];
 
 // ===== STATE =====
-const state = { activeFilters: new Set(), collapsed: new Set(), mode: 'plan', packed: new Set(), hidePacked: false };
+const state = { activeFilters: new Set(), collapsed: new Set(), mode: 'plan', packed: new Set(), hidePacked: false, morning: new Set(), sunMode: false };
+function isPackMode() { return state.mode === 'pack' || state.mode === 'morning'; }
 // activeFilters: empty Set = show all travelers. Non-empty = show only those traveler IDs.
 function isFiltered(tid) { return state.activeFilters.size === 0 || state.activeFilters.has(tid); }
 const LS_KEY = 'packforxyz-planner';
@@ -1053,7 +1062,7 @@ function saveState() {
   try { localStorage.setItem(LS_KEY, JSON.stringify(local)); } catch(e) {}
   // Save shared state to Firebase
   if (!stateRef) return;
-  const shared = { list: PACKING_LIST, packed: [...state.packed], travelers: TRIP.travelers, name: TRIP.name };
+  const shared = { list: PACKING_LIST, packed: [...state.packed], travelers: TRIP.travelers, name: TRIP.name, morning: [...state.morning] };
   _fbWriting = true;
   stateRef.set(shared).then(() => { _fbWriting = false; flashSyncFlame(); }).catch(() => { _fbWriting = false; });
 }
@@ -1082,6 +1091,8 @@ function applySharedData(data) {
   }
   if (data.packed) state.packed = new Set(data.packed);
   else state.packed = new Set();
+  if (data.morning) state.morning = new Set(data.morning);
+  else state.morning = new Set();
   // Load travelers if present (backward compat: keep defaults if missing)
   if (data.travelers && Array.isArray(data.travelers) && data.travelers.length > 0) {
     TRIP.travelers = data.travelers;
@@ -1102,7 +1113,7 @@ function migrateFromLocalStorage() {
     }
     if (data.packed) state.packed = new Set(data.packed);
     // Push shared data to Firebase
-    const shared = { list: PACKING_LIST, packed: [...state.packed], travelers: TRIP.travelers };
+    const shared = { list: PACKING_LIST, packed: [...state.packed], travelers: TRIP.travelers, morning: [] };
     stateRef.set(shared);
     // Keep only local keys in localStorage going forward
     const local = { filters: data.filters || [], collapsed: data.collapsed || [],
@@ -1155,6 +1166,7 @@ function packKey(itemId, tid) { return itemId + '-' + tid; }
 function getPackProgress() {
   let packed = 0, total = 0;
   for (const item of PACKING_LIST) {
+    if (state.morning.has(item.id)) continue; // exclude morning items from pack progress
     for (const t of TRIP.travelers) {
       if ((item.q[t.id] || 0) > 0) { total++; if (state.packed.has(packKey(item.id, t.id))) packed++; }
     }
@@ -1164,6 +1176,7 @@ function getPackProgress() {
 function getPersonProgress(tid) {
   let packed = 0, total = 0;
   for (const item of PACKING_LIST) {
+    if (state.morning.has(item.id)) continue;
     if ((item.q[tid] || 0) > 0) { total++; if (state.packed.has(packKey(item.id, tid))) packed++; }
   }
   return { packed, total };
@@ -1171,7 +1184,7 @@ function getPersonProgress(tid) {
 function getCatPackProgress(catId) {
   let packed = 0, total = 0;
   for (const item of PACKING_LIST) {
-    if (item.cat !== catId) continue;
+    if (item.cat !== catId || state.morning.has(item.id)) continue;
     for (const t of TRIP.travelers) {
       if ((item.q[t.id] || 0) > 0) { total++; if (state.packed.has(packKey(item.id, t.id))) packed++; }
     }
@@ -1183,6 +1196,34 @@ function isItemFullyPacked(item) {
     if ((item.q[t.id] || 0) > 0 && !state.packed.has(packKey(item.id, t.id))) return false;
   }
   return true;
+}
+function getMorningPackProgress() {
+  let packed = 0, total = 0;
+  for (const item of PACKING_LIST) {
+    if (!state.morning.has(item.id)) continue;
+    for (const t of TRIP.travelers) {
+      if ((item.q[t.id] || 0) > 0) { total++; if (state.packed.has(packKey(item.id, t.id))) packed++; }
+    }
+  }
+  return { packed, total };
+}
+function getMorningPersonProgress(tid) {
+  let packed = 0, total = 0;
+  for (const item of PACKING_LIST) {
+    if (!state.morning.has(item.id)) continue;
+    if ((item.q[tid] || 0) > 0) { total++; if (state.packed.has(packKey(item.id, tid))) packed++; }
+  }
+  return { packed, total };
+}
+function getMorningCatPackProgress(catId) {
+  let packed = 0, total = 0;
+  for (const item of PACKING_LIST) {
+    if (item.cat !== catId || !state.morning.has(item.id)) continue;
+    for (const t of TRIP.travelers) {
+      if ((item.q[t.id] || 0) > 0) { total++; if (state.packed.has(packKey(item.id, t.id))) packed++; }
+    }
+  }
+  return { packed, total };
 }
 
 // ===== RENDER =====
@@ -1196,28 +1237,32 @@ function render() {
   </div>`;
   h += `<div class="mode-bar">
     <div class="mode-bar-left">
-      ${state.mode==='pack'?`<button class="hide-packed-toggle ${state.hidePacked?'active':''}" data-hide-packed>${state.hidePacked?'\u2713 ':''}Hide packed</button>`:''}
+      ${isPackMode()?`<button class="hide-packed-toggle ${state.hidePacked?'active':''}" data-hide-packed>${state.hidePacked?'\u2713 ':''}Hide packed</button>`:''}
+      ${state.mode==='pack'?`<button class="sun-btn ${state.sunMode?'active':''}" data-sun-toggle>\u2600 Morning</button>`:''}
     </div>
     <div class="mode-bar-center">
-      <span class="mode-toggle-label plan-label ${state.mode==='plan'?'active':'inactive'}">Planning</span>
-      <div class="mode-switch ${state.mode==='pack'?'pack':''}" data-mode-toggle></div>
-      <span class="mode-toggle-label pack-label ${state.mode==='pack'?'active':'inactive'}">Packing</span>
+      <div class="mode-seg">
+        <button class="mode-seg-btn plan-seg ${state.mode==='plan'?'active':''}" data-mode-set="plan">Planning</button>
+        <button class="mode-seg-btn pack-seg ${state.mode==='pack'?'active':''}" data-mode-set="pack">Packing</button>
+        <button class="mode-seg-btn morn-seg ${state.mode==='morning'?'active':''}" data-mode-set="morning">Morning</button>
+      </div>
     </div>
     <div class="mode-bar-right" style="position:relative;">
       <button class="manage-btn" data-manage-menu>\u2699\uFE0F Manage</button>
     </div>
   </div>`;
 
-  // Progress bar (pack mode only)
-  if (state.mode === 'pack') {
-    const prog = getPackProgress();
+  // Progress bar (pack/morning mode)
+  if (isPackMode()) {
+    const prog = state.mode === 'morning' ? getMorningPackProgress() : getPackProgress();
     const pct = prog.total ? Math.round(prog.packed / prog.total * 100) : 0;
+    const label = state.mode === 'morning' ? 'morning items packed' : 'items packed';
     h += `<div class="progress-section" id="progress-section">`;
-    h += `<div class="progress-text"><span>${prog.packed}/${prog.total} items packed</span><span class="progress-pct">${pct}%</span></div>`;
+    h += `<div class="progress-text"><span>${prog.packed}/${prog.total} ${label}</span><span class="progress-pct">${pct}%</span></div>`;
     h += `<div class="progress-bar-outer"><div class="progress-bar-fill" id="progress-fill" style="width:${pct}%"></div></div>`;
     h += `<div class="person-progress">`;
     for (const t of TRIP.travelers) {
-      const pp = getPersonProgress(t.id);
+      const pp = state.mode === 'morning' ? getMorningPersonProgress(t.id) : getPersonProgress(t.id);
       if (pp.total === 0) continue;
       const ppct = Math.round(pp.packed / pp.total * 100);
       h += `<div class="person-prog-chip" style="--tc:${t.color};">${t.initial} ${pp.packed}/${pp.total}
@@ -1246,7 +1291,7 @@ function render() {
     h += `<div class="category-header" data-cat="${cat.id}">
       <span class="cat-emoji">${cat.emoji}</span><span>${cat.id}</span>
       <span class="cat-count" data-cat-count="${cat.id}">${items.length} items</span>
-      ${state.mode==='pack'?`<span class="cat-pack-progress" data-cat-pack="${cat.id}">${(() => { const p = getCatPackProgress(cat.id); return p.packed + '/' + p.total; })()}</span>`:''}
+      ${isPackMode()?`<span class="cat-pack-progress" data-cat-pack="${cat.id}">${(() => { const p = state.mode==='morning' ? getMorningCatPackProgress(cat.id) : getCatPackProgress(cat.id); return p.packed + '/' + p.total; })()}</span>`:''}
       <span class="cat-chevron">\u25bc</span></div>`;
     h += `<div class="category-body">`;
     let prevSub = null;
@@ -1257,20 +1302,26 @@ function render() {
         h += `<div class="subcat-divider" data-subcat="${cat.id}::${item.sub}"><span class="subcat-icon">${icon}</span><span class="subcat-label">${item.sub}</span><span class="subcat-line"></span></div>`;
         prevSub = item.sub;
       }
-      // In pack mode: hide rows where none of the filtered travelers have qty > 0
+      // In pack/morning mode: hide rows where none of the filtered travelers have qty > 0
       const hasFilteredQty = state.activeFilters.size === 0 || TRIP.travelers.some(t => isFiltered(t.id) && (item.q[t.id] || 0) > 0);
-      if (state.mode === 'pack' && !hasFilteredQty) continue; // skip row entirely
-      // Packed state: in pack mode, "all packed" means all *filtered* travelers are packed
-      const allPacked = state.mode === 'pack' && TRIP.travelers.every(t => !isFiltered(t.id) || (item.q[t.id] || 0) === 0 || state.packed.has(packKey(item.id, t.id)));
-      const hideRow = state.mode === 'pack' && state.hidePacked && allPacked;
+      if (isPackMode() && !hasFilteredQty) continue;
+      // Morning mode: only show morning-tagged items
+      if (state.mode === 'morning' && !state.morning.has(item.id)) continue;
+      // Pack mode: filter OUT morning-tagged items
+      if (state.mode === 'pack' && state.morning.has(item.id)) continue;
+      // Packed state
+      const allPacked = isPackMode() && TRIP.travelers.every(t => !isFiltered(t.id) || (item.q[t.id] || 0) === 0 || state.packed.has(packKey(item.id, t.id)));
+      const hideRow = isPackMode() && state.hidePacked && allPacked;
       const subcatKey = item.sub ? `${cat.id}::${item.sub}` : '';
       h += `<div class="item-row grid-row ${allPacked?'all-packed':''} ${hideRow?'hide-packed-row':''}" data-row="${item.id}" ${subcatKey ? `data-subcat-item="${subcatKey}"` : ''}>`;
 
-      h += `<div class="item-name" title="${item.name}">${item.name}</div>`;
+      const isMorningItem = state.morning.has(item.id);
+      const sunClickable = state.mode === 'pack' && state.sunMode;
+      h += `<div class="item-name ${isMorningItem?'morning-tagged':''} ${sunClickable?'sun-clickable':''}" data-item-name="${item.id}" title="${item.name}">${item.name}</div>`;
       for (const t of TRIP.travelers) {
         const v = item.q[t.id] || 0;
         const dim = !isFiltered(t.id);
-        if (state.mode === 'pack') {
+        if (isPackMode()) {
           const pk = state.packed.has(packKey(item.id, t.id));
           h += `<div class="pack-cell ${dim?'dimmed':''} ${v===0?'empty':''}" data-cell="${item.id}-${t.id}" data-traveler="${t.id}" style="--tc:${t.color};"
             data-pack-item="${item.id}" data-pack-tid="${t.id}">
@@ -1301,6 +1352,7 @@ function render() {
   h += `<button class="fab" data-fab>+</button>`;
   app.innerHTML = h;
   document.body.classList.toggle('pack-mode', state.mode === 'pack');
+  document.body.classList.toggle('morning-mode', state.mode === 'morning');
   updateGridCols();
 }
 
@@ -1312,8 +1364,8 @@ function setFilter(id) {
     if (state.activeFilters.has(id)) state.activeFilters.delete(id);
     else state.activeFilters.add(id);
   }
-  // In pack mode, re-render since row visibility changes
-  if (state.mode === 'pack') { saveState(); render(); setupDragHandlers(); return; }
+  // In pack/morning mode, re-render since row visibility changes
+  if (isPackMode()) { saveState(); render(); setupDragHandlers(); return; }
   // In plan mode, do incremental DOM updates
   const noFilter = state.activeFilters.size === 0;
   // Update "All" pill
@@ -1366,6 +1418,7 @@ function changeQty(itemId, tid, delta) {
 
 function deleteItem(itemId) {
   closeQtyPicker();
+  state.morning.delete(itemId);
   const row = document.querySelector(`[data-row="${itemId}"]`);
   if (row) {
     row.classList.add('removing');
@@ -1505,7 +1558,10 @@ function updateCatCounts() {
 }
 
 // ===== PACK MODE ACTIONS =====
-function toggleMode() {
+function setMode(newMode) {
+  if (newMode === state.mode) return;
+  if (state.mode === 'pack') state.sunMode = false;
+
   // Anchor scroll to the first visible item row or category header
   const stickyH = (document.querySelector('.mode-bar')?.offsetHeight || 0)
     + (document.querySelector('.column-headers')?.offsetHeight || 0);
@@ -1520,16 +1576,16 @@ function toggleMode() {
     }
   }
 
-  state.mode = state.mode === 'plan' ? 'pack' : 'plan';
+  state.mode = newMode;
   saveState();
   render();
+  setupDragHandlers();
 
   // Restore scroll so the same element stays in the same viewport position
   let targetEl = null;
   if (anchorRowId) {
     targetEl = document.querySelector(`[data-row="${anchorRowId}"]`);
     if (!targetEl) {
-      // Row hidden in pack mode — fall back to its category header
       const item = PACKING_LIST.find(i => i.id === anchorRowId);
       if (item) targetEl = document.querySelector(`.category-header[data-cat="${item.cat}"]`);
     }
@@ -1542,6 +1598,24 @@ function toggleMode() {
     const rect = targetEl.getBoundingClientRect();
     window.scrollBy(0, rect.top - newStickyH - anchorOffset);
   }
+}
+
+function toggleSunMode() {
+  state.sunMode = !state.sunMode;
+  const btn = document.querySelector('[data-sun-toggle]');
+  if (btn) btn.classList.toggle('active', state.sunMode);
+  document.querySelectorAll('.item-name[data-item-name]').forEach(el => {
+    el.classList.toggle('sun-clickable', state.sunMode);
+  });
+}
+
+function toggleMorning(itemId) {
+  if (state.morning.has(itemId)) state.morning.delete(itemId);
+  else state.morning.add(itemId);
+  saveState();
+  // Re-render since the item should disappear from pack view when tagged
+  render();
+  setupDragHandlers();
 }
 
 function togglePacked(itemId, tid) {
@@ -1622,19 +1696,21 @@ function updateSubcatVisibility() {
 }
 
 function updatePackProgress() {
-  const prog = getPackProgress();
+  const isMorn = state.mode === 'morning';
+  const prog = isMorn ? getMorningPackProgress() : getPackProgress();
   const pct = prog.total ? Math.round(prog.packed / prog.total * 100) : 0;
+  const label = isMorn ? 'morning items packed' : 'items packed';
   const section = document.getElementById('progress-section');
   if (!section) return;
   const textEl = section.querySelector('.progress-text');
-  if (textEl) textEl.innerHTML = `<span>${prog.packed}/${prog.total} items packed</span><span class="progress-pct">${pct}%</span>`;
+  if (textEl) textEl.innerHTML = `<span>${prog.packed}/${prog.total} ${label}</span><span class="progress-pct">${pct}%</span>`;
   const fill = document.getElementById('progress-fill');
   if (fill) fill.style.width = pct + '%';
   // Person progress
   const chips = section.querySelectorAll('.person-prog-chip');
   let idx = 0;
   for (const t of TRIP.travelers) {
-    const pp = getPersonProgress(t.id);
+    const pp = isMorn ? getMorningPersonProgress(t.id) : getPersonProgress(t.id);
     if (pp.total === 0) continue;
     const ppct = Math.round(pp.packed / pp.total * 100);
     if (chips[idx]) {
@@ -1645,16 +1721,22 @@ function updatePackProgress() {
   // Category progress
   for (const cat of CATS) {
     const el = document.querySelector(`[data-cat-pack="${cat.id}"]`);
-    if (el) { const cp = getCatPackProgress(cat.id); el.textContent = cp.packed + '/' + cp.total; }
+    if (el) { const cp = isMorn ? getMorningCatPackProgress(cat.id) : getCatPackProgress(cat.id); el.textContent = cp.packed + '/' + cp.total; }
   }
 }
 
 // ===== EVENT DELEGATION =====
 function handleClick(e) {
   const t = e.target;
-  // Mode toggle
-  const modeToggle = t.closest('[data-mode-toggle]');
-  if (modeToggle) { toggleMode(); return; }
+  // Mode segmented buttons
+  const modeSeg = t.closest('[data-mode-set]');
+  if (modeSeg) { setMode(modeSeg.dataset.modeSet); return; }
+  // Sun toggle (morning tagging mode)
+  const sunToggle = t.closest('[data-sun-toggle]');
+  if (sunToggle) { toggleSunMode(); return; }
+  // Item name click for morning tagging
+  const itemName = t.closest('[data-item-name]');
+  if (itemName && state.mode === 'pack' && state.sunMode) { toggleMorning(itemName.dataset.itemName); return; }
   // Hide-packed toggle
   const hidePacked = t.closest('[data-hide-packed]');
   if (hidePacked) { toggleHidePacked(); return; }
@@ -2044,7 +2126,7 @@ function addCatalogItemFromSearch(catalogId) {
   if (catItem.sub) newItem.sub = catItem.sub;
   PACKING_LIST.push(newItem);
   closeAddModal();
-  if (state.mode === 'pack') { state.mode = 'plan'; }
+  if (isPackMode()) { state.mode = 'plan'; state.sunMode = false; }
   saveState();
   render();
   setupDragHandlers();
@@ -2066,7 +2148,7 @@ function submitNewItemFromSearch() {
   if (_addModalSub) newItem.sub = _addModalSub;
   PACKING_LIST.push(newItem);
   closeAddModal();
-  if (state.mode === 'pack') { state.mode = 'plan'; }
+  if (isPackMode()) { state.mode = 'plan'; state.sunMode = false; }
   saveState();
   render();
   setupDragHandlers();
@@ -2141,7 +2223,7 @@ function setupDragHandlers() {
           addPendingClear(itemId, tid, cell);
         }
       }, 500);
-    } else if (state.mode === 'pack') {
+    } else if (isPackMode()) {
       const cell = e.target.closest('.pack-cell');
       if (!cell || cell.classList.contains('dimmed') || cell.classList.contains('empty')) return;
       const itemId = cell.dataset.packItem;
@@ -2174,8 +2256,8 @@ function setupDragHandlers() {
   app.addEventListener('pointerup', (e) => {
     _pointerStartPos = null;
     if (_pickerOpen) return;
-    if (state.mode === 'pack') {
-      // In pack mode, cancel long-press timer on tap; click handler does togglePacked
+    if (isPackMode()) {
+      // In pack/morning mode, cancel long-press timer on tap; click handler does togglePacked
       if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
       return;
     }
@@ -2741,6 +2823,8 @@ function switchTrip(tripId) {
   _fbReady = false;
   PACKING_LIST = [];
   state.packed = new Set();
+  state.morning = new Set();
+  state.sunMode = false;
   state.activeFilters = new Set();
   TRIP.travelers = [];
   TRIP.name = '';
