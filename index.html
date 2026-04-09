@@ -336,14 +336,13 @@
     .mode-bar{
       position:sticky;top:0;z-index:32;
       background:var(--cream);
-      padding:8px var(--side-pad);
-      display:flex;align-items:center;justify-content:space-between;
+      padding:8px var(--side-pad) 6px;
+      display:flex;flex-direction:column;align-items:center;gap:6px;
       border-bottom:1px solid rgba(44,24,16,0.08);
       box-shadow:0 1px 4px rgba(44,24,16,0.04);
     }
-    .mode-bar-left,.mode-bar-right{display:flex;align-items:center;min-width:80px;}
-    .mode-bar-right{justify-content:flex-end;}
-    .mode-bar-center{display:flex;align-items:center;gap:10px;}
+    .mode-bar-seg{display:flex;justify-content:center;}
+    .mode-bar-actions{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;}
     .manage-btn{
       display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;border:1.5px solid rgba(44,24,16,0.2);
       background:transparent;cursor:pointer;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;
@@ -369,9 +368,9 @@
     .mode-seg-btn.pack-seg.active{background:#4ADE80;color:#fff;}
     .mode-seg-btn.morn-seg.active{background:#F59E0B;color:#fff;}
     .sun-btn{
-      display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;
+      display:flex;align-items:center;gap:4px;padding:5px 14px;border-radius:14px;
       border:1.5px solid #F59E0B;background:transparent;cursor:pointer;
-      font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#F59E0B;
+      font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:#F59E0B;
       transition:all 0.15s;user-select:none;
     }
     .sun-btn:hover{background:rgba(245,158,11,0.06);}
@@ -1236,40 +1235,19 @@ function render() {
     <div class="header-title">${TRIP.name} <span class="trip-chevron">\u25be</span></div>
   </div>`;
   h += `<div class="mode-bar">
-    <div class="mode-bar-left">
-      ${isPackMode()?`<button class="hide-packed-toggle ${state.hidePacked?'active':''}" data-hide-packed>${state.hidePacked?'\u2713 ':''}Hide packed</button>`:''}
-      ${state.mode==='pack'?`<button class="sun-btn ${state.sunMode?'active':''}" data-sun-toggle>\u2600 Morning</button>`:''}
-    </div>
-    <div class="mode-bar-center">
+    <div class="mode-bar-seg">
       <div class="mode-seg">
         <button class="mode-seg-btn plan-seg ${state.mode==='plan'?'active':''}" data-mode-set="plan">Planning</button>
         <button class="mode-seg-btn pack-seg ${state.mode==='pack'?'active':''}" data-mode-set="pack">Packing</button>
         <button class="mode-seg-btn morn-seg ${state.mode==='morning'?'active':''}" data-mode-set="morning">Morning</button>
       </div>
     </div>
-    <div class="mode-bar-right" style="position:relative;">
+    <div class="mode-bar-actions">
+      ${isPackMode()?`<button class="hide-packed-toggle ${state.hidePacked?'active':''}" data-hide-packed>${state.hidePacked?'\u2713 ':''}Hide packed</button>`:''}
+      ${state.mode==='pack'?`<button class="sun-btn ${state.sunMode?'active':''}" data-sun-toggle>\u2600 Morning</button>`:''}
       <button class="manage-btn" data-manage-menu>\u2699\uFE0F Manage</button>
     </div>
   </div>`;
-
-  // Progress bar (pack/morning mode)
-  if (isPackMode()) {
-    const prog = state.mode === 'morning' ? getMorningPackProgress() : getPackProgress();
-    const pct = prog.total ? Math.round(prog.packed / prog.total * 100) : 0;
-    const label = state.mode === 'morning' ? 'morning items packed' : 'items packed';
-    h += `<div class="progress-section" id="progress-section">`;
-    h += `<div class="progress-text"><span>${prog.packed}/${prog.total} ${label}</span><span class="progress-pct">${pct}%</span></div>`;
-    h += `<div class="progress-bar-outer"><div class="progress-bar-fill" id="progress-fill" style="width:${pct}%"></div></div>`;
-    h += `<div class="person-progress">`;
-    for (const t of TRIP.travelers) {
-      const pp = state.mode === 'morning' ? getMorningPersonProgress(t.id) : getPersonProgress(t.id);
-      if (pp.total === 0) continue;
-      const ppct = Math.round(pp.packed / pp.total * 100);
-      h += `<div class="person-prog-chip" style="--tc:${t.color};">${t.initial} ${pp.packed}/${pp.total}
-        <div class="prog-mini"><div class="prog-mini-fill" style="width:${ppct}%"></div></div></div>`;
-    }
-    h += `</div></div>`;
-  }
 
   // Column headers (also serve as filter pills)
   const noFilter = state.activeFilters.size === 0;
