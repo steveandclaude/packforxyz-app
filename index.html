@@ -375,7 +375,6 @@
     }
     .sun-btn:hover{background:rgba(245,158,11,0.06);}
     .sun-btn.active{background:#F59E0B;color:#fff;}
-    .item-name.morning-tagged::after{content:'\2600';margin-left:4px;font-size:12px;opacity:0.7;}
     .item-name.sun-clickable{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;
       text-decoration-color:#F59E0B;text-underline-offset:2px;}
 
@@ -1306,9 +1305,8 @@ function render() {
       const subcatKey = item.sub ? `${cat.id}::${item.sub}` : '';
       h += `<div class="item-row grid-row ${allPacked?'all-packed':''}" data-row="${item.id}" ${subcatKey ? `data-subcat-item="${subcatKey}"` : ''}>`;
 
-      const isMorningItem = state.morning.has(item.id);
       const sunClickable = state.mode === 'pack' && state.sunMode;
-      h += `<div class="item-name ${isMorningItem?'morning-tagged':''} ${sunClickable?'sun-clickable':''}" data-item-name="${item.id}" title="${item.name}">${item.name}</div>`;
+      h += `<div class="item-name ${sunClickable?'sun-clickable':''}" data-item-name="${item.id}" title="${item.name}">${item.name}</div>`;
       for (const t of TRIP.travelers) {
         const v = item.q[t.id] || 0;
         const dim = !isFiltered(t.id);
