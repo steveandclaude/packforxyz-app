@@ -1264,6 +1264,21 @@ function render() {
   for (const cat of CATS) {
     const items = sortBySubcategory(PACKING_LIST.filter(i => i.cat === cat.id), cat.id);
     if (items.length === 0) continue;
+    // In pack/morning mode, skip categories with no visible items
+    if (isPackMode()) {
+      const hasVisible = items.some(item => {
+        const hasFilteredQty = state.activeFilters.size === 0 || TRIP.travelers.some(t => isFiltered(t.id) && (item.q[t.id] || 0) > 0);
+        if (!hasFilteredQty) return false;
+        if (state.mode === 'morning' && !state.morning.has(item.id)) return false;
+        if (state.mode === 'pack' && state.morning.has(item.id)) return false;
+        if (state.hidePacked) {
+          const allPacked = TRIP.travelers.every(t => !isFiltered(t.id) || (item.q[t.id] || 0) === 0 || state.packed.has(packKey(item.id, t.id)));
+          if (allPacked) return false;
+        }
+        return true;
+      });
+      if (!hasVisible) continue;
+    }
     const isColl = state.collapsed.has(cat.id);
     h += `<div class="category ${isColl?'collapsed':''}" data-category="${cat.id}">`;
     h += `<div class="category-header" data-cat="${cat.id}">
