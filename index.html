@@ -1289,24 +1289,22 @@ function render() {
     h += `<div class="category-body">`;
     let prevSub = null;
     for (const item of items) {
+      // In pack/morning mode: filter before rendering subcategory dividers
+      const hasFilteredQty = state.activeFilters.size === 0 || TRIP.travelers.some(t => isFiltered(t.id) && (item.q[t.id] || 0) > 0);
+      if (isPackMode() && !hasFilteredQty) continue;
+      if (state.mode === 'morning' && !state.morning.has(item.id)) continue;
+      if (state.mode === 'pack' && state.morning.has(item.id)) continue;
+      const allPacked = isPackMode() && TRIP.travelers.every(t => !isFiltered(t.id) || (item.q[t.id] || 0) === 0 || state.packed.has(packKey(item.id, t.id)));
+      const hideRow = isPackMode() && state.hidePacked && allPacked;
+      if (hideRow) continue; // skip entirely so subcategory dividers don't show for hidden items
       // Insert subcategory divider when subcategory changes (only for categories with sort config)
       if (SUBCATEGORY_ORDER[cat.id] && item.sub && item.sub !== prevSub) {
         const icon = (SUBCATEGORY_ICONS_BY_CAT[cat.id] && SUBCATEGORY_ICONS_BY_CAT[cat.id][item.sub]) || SUBCATEGORY_ICONS[item.sub] || '';
         h += `<div class="subcat-divider" data-subcat="${cat.id}::${item.sub}"><span class="subcat-icon">${icon}</span><span class="subcat-label">${item.sub}</span><span class="subcat-line"></span></div>`;
         prevSub = item.sub;
       }
-      // In pack/morning mode: hide rows where none of the filtered travelers have qty > 0
-      const hasFilteredQty = state.activeFilters.size === 0 || TRIP.travelers.some(t => isFiltered(t.id) && (item.q[t.id] || 0) > 0);
-      if (isPackMode() && !hasFilteredQty) continue;
-      // Morning mode: only show morning-tagged items
-      if (state.mode === 'morning' && !state.morning.has(item.id)) continue;
-      // Pack mode: filter OUT morning-tagged items
-      if (state.mode === 'pack' && state.morning.has(item.id)) continue;
-      // Packed state
-      const allPacked = isPackMode() && TRIP.travelers.every(t => !isFiltered(t.id) || (item.q[t.id] || 0) === 0 || state.packed.has(packKey(item.id, t.id)));
-      const hideRow = isPackMode() && state.hidePacked && allPacked;
       const subcatKey = item.sub ? `${cat.id}::${item.sub}` : '';
-      h += `<div class="item-row grid-row ${allPacked?'all-packed':''} ${hideRow?'hide-packed-row':''}" data-row="${item.id}" ${subcatKey ? `data-subcat-item="${subcatKey}"` : ''}>`;
+      h += `<div class="item-row grid-row ${allPacked?'all-packed':''}" data-row="${item.id}" ${subcatKey ? `data-subcat-item="${subcatKey}"` : ''}>`;
 
       const isMorningItem = state.morning.has(item.id);
       const sunClickable = state.mode === 'pack' && state.sunMode;
