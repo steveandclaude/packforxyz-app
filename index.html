@@ -1030,7 +1030,7 @@ const catalogRef = db.ref('catalog');   // always-pack prefs + custom catalog it
 let stateRef = null;       // points to trips/{id}, set by switchTrip()
 let currentTripId = null;  // active trip ID
 let _fbReady = false;   // true once first snapshot arrives
-let _fbWriting = false;  // guard to ignore our own writes
+let _fbWriting = 0;  // write counter — ignore snapshots while > 0
 
 // Catalog customization state (loaded from Firebase, trip-independent)
 let _alwaysPack = {};      // { itemId: { qty: { steph: 3 } } }
@@ -1062,8 +1062,8 @@ function saveState() {
   // Save shared state to Firebase
   if (!stateRef) return;
   const shared = { list: PACKING_LIST, packed: [...state.packed], travelers: TRIP.travelers, name: TRIP.name, morning: [...state.morning] };
-  _fbWriting = true;
-  stateRef.set(shared).then(() => { _fbWriting = false; flashSyncFlame(); }).catch(() => { _fbWriting = false; });
+  _fbWriting++;
+  stateRef.set(shared).then(() => { _fbWriting--; flashSyncFlame(); }).catch(() => { _fbWriting--; });
 }
 
 function loadLocalState() {
@@ -1088,9 +1088,9 @@ function applySharedData(data) {
       if (!item.sub && _SUB_MAP[item.id]) item.sub = _SUB_MAP[item.id];
     }
   }
-  if (data.packed) state.packed = new Set(data.packed);
+  if (data.packed) state.packed = new Set(Array.isArray(data.packed) ? data.packed : Object.values(data.packed));
   else state.packed = new Set();
-  if (data.morning) state.morning = new Set(data.morning);
+  if (data.morning) state.morning = new Set(Array.isArray(data.morning) ? data.morning : Object.values(data.morning));
   else state.morning = new Set();
   // Load travelers if present (backward compat: keep defaults if missing)
   if (data.travelers && Array.isArray(data.travelers) && data.travelers.length > 0) {
