@@ -2087,6 +2087,13 @@ function jumpToItem(itemId) {
   const item = PACKING_LIST.find(i => i.id === itemId);
   if (!item) return;
 
+  // Switch to the right mode if item isn't visible in current mode
+  if (state.mode === 'pack' && state.morning.has(itemId)) {
+    setMode('morning');
+  } else if (state.mode === 'morning' && !state.morning.has(itemId)) {
+    setMode('pack');
+  }
+
   // Uncollapse category if collapsed
   if (state.collapsed.has(item.cat)) {
     toggleCat(item.cat);
