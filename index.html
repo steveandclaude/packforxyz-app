@@ -1028,7 +1028,7 @@ const tripIndexRef = db.ref('tripIndex');
 const catalogRef = db.ref('catalog');   // always-pack prefs + custom catalog items
 let stateRef = null;       // points to trips/{id}, set by switchTrip()
 let currentTripId = null;  // active trip ID
-let _fbReady = false;   // true once first snapshot arrives
+let _fbReadyTripId = null;   // currentTripId for which first snapshot has arrived; gates writes
 let _fbWriting = 0;  // write counter — ignore snapshots while > 0
 
 // Catalog customization state (loaded from Firebase, trip-independent)
@@ -1060,6 +1060,18 @@ function saveState() {
   try { localStorage.setItem(LS_KEY, JSON.stringify(local)); } catch(e) {}
   // Save shared state to Firebase
   if (!stateRef) return;
+  // Ready-gate: don't write until first snapshot for THIS trip has arrived. Prevents
+  // wiping Firebase data with empty in-memory state during the switchTrip-to-snapshot gap.
+  if (_fbReadyTripId !== currentTripId) {
+    console.warn('saveState: skipping — snapshot not yet received for trip', currentTripId);
+    return;
+  }
+  // Destructive-write guard: refuse to write a fully empty trip. Belt-and-suspenders
+  // catch for any future code path that could clear in-memory state unexpectedly.
+  if (PACKING_LIST.length === 0 && TRIP.travelers.length === 0 && !TRIP.name) {
+    console.warn('saveState: refusing to write empty state to trip', currentTripId);
+    return;
+  }
   const shared = { list: PACKING_LIST, packed: [...state.packed], travelers: TRIP.travelers, name: TRIP.name, morning: [...state.morning] };
   _fbWriting++;
   stateRef.set(shared).then(() => { _fbWriting--; flashSyncFlame(); }).catch(() => { _fbWriting--; });
@@ -2801,12 +2813,8 @@ let _tripList = {};           // cached trip index {id: {name, createdAt}}
 function _onTripSnapshot(snapshot) {
   if (_fbWriting) return;
   const data = snapshot.val();
-  if (data) {
-    applySharedData(data);
-    if (!_fbReady) _fbReady = true;
-  } else if (!_fbReady) {
-    _fbReady = true;
-  }
+  if (data) applySharedData(data);
+  _fbReadyTripId = currentTripId;
   updateGridCols();
   render();
   setupDragHandlers();
@@ -2815,8 +2823,8 @@ function _onTripSnapshot(snapshot) {
 function switchTrip(tripId) {
   // Detach old listener
   if (stateRef) stateRef.off('value', _onTripSnapshot);
-  // Reset state
-  _fbReady = false;
+  // Reset state — note: do NOT touch _fbReadyTripId; it still points to old trip,
+  // which means saveState() will be gated for new trip until its snapshot arrives.
   PACKING_LIST = [];
   state.packed = new Set();
   state.morning = new Set();
@@ -3130,7 +3138,7 @@ function doSignOut() {
   if (stateRef) stateRef.off('value', _onTripSnapshot);
   stateRef = null;
   currentTripId = null;
-  _fbReady = false;
+  _fbReadyTripId = null;
   PACKING_LIST = [];
   state.packed = new Set();
   TRIP.travelers = [];
